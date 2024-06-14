@@ -1,16 +1,14 @@
-'use client'
-
 import React, { useState, useEffect, useRef } from "react";
-import { Stack, VStack, Text, HStack, Button, Progress } from "@chakra-ui/react";
+import { VStack, Text, Stack, Button, Progress } from "@chakra-ui/react";
 import { BiUpload } from 'react-icons/bi';
 import { RangeDatepicker } from "chakra-dayzed-datepicker";
-
-import Select from "./ClientSelectData"
+import Select from "./ClientSelectData";
 
 const DataInput = () => {
     const [selectedDates, setSelectedDates] = useState([new Date(), new Date()]);
     const [selectedReqNo, setSelectedReqNo] = useState(null);
     const [selectedItemNo, setSelectedItemNo] = useState(null); 
+    const [reqNoOptions, setReqNoOptions] = useState([]);
     const [itemNoOptions, setItemNoOptions] = useState([]);
     const menuPortalTargetRef = useRef(null);
 
@@ -18,46 +16,59 @@ const DataInput = () => {
         if (typeof window !== 'undefined') {
             menuPortalTargetRef.current = document.body;
         }
+        fetchReqNoOptions();  // Fetch REQ No options when component mounts
     }, []);
 
-    const handleReqNoChange = (selectedOption) => {
+    const fetchReqNoOptions = async () => {
+        try {
+            const response = await fetch("http://localhost:8000/req_no");
+            if (response.ok) {
+                const data = await response.json();
+                const options = data.req_numbers.map(reqNo => ({
+                    value: reqNo,
+                    label: reqNo,
+                }));
+                setReqNoOptions(options);
+            } else {
+                console.error("Failed to fetch REQ_NO options:", response.statusText);
+            }
+        } catch (error) {
+            console.error("Error fetching REQ_NO options:", error);
+        }
+    };
+
+    const handleReqNoChange = async (selectedOption) => {
         setSelectedReqNo(selectedOption);
         setSelectedItemNo(null);
-
+    
         if (selectedOption) {
-            setItemNoOptions(reqToItemMap[selectedOption.value] || []);
+            try {
+                const response = await fetch(`http://localhost:8000/test_no?req_no=${selectedOption.value}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data && data.test_numbers && Array.isArray(data.test_numbers)) {
+                        const options = data.test_numbers.map(testNo => ({
+                            value: testNo,
+                            label: testNo,
+                        }));
+                        setItemNoOptions(options);
+                    } else {
+                        console.error("Invalid data structure received:", data);
+                        setItemNoOptions([]);
+                    }
+                } else {
+                    console.error("Failed to fetch ITEM_NO options:", response.statusText);
+                    setItemNoOptions([]);
+                }
+            } catch (error) {
+                console.error("Error fetching ITEM_NO options:", error);
+                setItemNoOptions([]);
+            }
         } else {
             setItemNoOptions([]);
         }
     };
-
-    const handleItemNoChange = (selectedOption) => {
-        setSelectedItemNo(selectedOption);
-    };
-
-    const reqNoOptions = [
-        { value: 'req1', label: 'REQ 1' },
-        { value: 'req2', label: 'REQ 2' },
-        { value: 'req3', label: 'REQ 3' },
-        { value: 'req4', label: 'REQ 4' },
-        { value: 'req5', label: 'REQ 5' },
-        { value: 'req6', label: 'REQ 6' },
-    ];
-
-    const reqToItemMap = {
-        req1: [
-            { value: 'item1', label: 'ITEM 1-1' },
-            { value: 'item2', label: 'ITEM 1-2' },
-        ],
-        req2: [
-            { value: 'item3', label: 'ITEM 2-1' },
-            { value: 'item4', label: 'ITEM 2-2' },
-        ],
-        req3: [
-            { value: 'item5', label: 'ITEM 3-1' },
-            { value: 'item6', label: 'ITEM 3-2' },
-        ],
-    };
+    
 
     return (
         <VStack
@@ -93,11 +104,11 @@ const DataInput = () => {
                         value={selectedReqNo}
                         onChange={handleReqNoChange}
                         options={reqNoOptions}
-                        placeholder="시험 의뢰번호를 입력해주세요."
-                        menuPortalTarget={menuPortalTargetRef.current} // render drop down to body ("선택 독립성")
+                        placeholder="Select REQ No"
+                        menuPortalTarget={menuPortalTargetRef.current}
                         menuPosition="fixed"
                         styles={{ 
-                            menuPortal: base => ({ ...base, zIndex: 9999 }) // above other elements
+                            menuPortal: base => ({ ...base, zIndex: 9999 })
                         }}
                     />
                 </Stack>
@@ -110,11 +121,11 @@ const DataInput = () => {
                     </Text>
                     <Select
                         value={selectedItemNo}
-                        onChange={handleItemNoChange}
+                        onChange={(selectedOption) => setSelectedItemNo(selectedOption)}
                         options={itemNoOptions}
-                        placeholder="시험 항목을 선택하세요"
+                        placeholder="Select ITEM No"
                         isDisabled={!selectedReqNo}
-                        menuPortalTarget={menuPortalTargetRef.current} // drop down 독립 랜더링
+                        menuPortalTarget={menuPortalTargetRef.current}
                         menuPosition="fixed"
                         styles={{ 
                             menuPortal: base => ({ ...base, zIndex: 9999 })
@@ -166,7 +177,7 @@ const DataInput = () => {
                         }}
                     />
                 </Stack>
-                <HStack
+                <Stack
                     flex="40%"
                     flexDirection="row"
                     spacing={5}
@@ -189,7 +200,7 @@ const DataInput = () => {
                         width="60%" 
                         marginTop="60px"
                     />
-                </HStack>
+                </Stack>
             </Stack>
         </VStack>
     );
