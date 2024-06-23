@@ -36,7 +36,11 @@ yarn-error.log*
 next-env.d.ts
 
 # vscode cache
-__pycahce__
+__pycache__
 
 # environment variables
 src/api/.env
+
+# jupyter
+.ipynb_checkpoints
+influxdb_playground.ipynb

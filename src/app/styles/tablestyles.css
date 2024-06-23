@@ -1,11 +1,10 @@
 .styles {
     max-width: 100%;
-    margin-top: 10px;
-    margin-left: 10px;
 }
 
 .tableContainer {
-    max-width: 90%;
+    /* max-width: 90%; */
+    max-width: 100%;
     margin: 0 auto;
     margin-top: 10px;
 }
@@ -87,7 +86,8 @@ tbody td:last-child {
     display: flex;
     justify-content: flex-start;
     margin: 0 auto;
-    max-width: 90%;
+    /* max-width: 90%; */
+    max-width: 100%;
     padding: 10px;
     background-color: #f3f3f3; 
     border-bottom: 1px solid #e1e1e1;

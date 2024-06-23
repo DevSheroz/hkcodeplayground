@@ -1,23 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { VStack, Stack, Text, Button, Icon } from "@chakra-ui/react";
+import { VStack, Text, Button, Icon, Stack } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
 import TableFilter from "./TableFilter";
-import AddAlgorithmButton from "./addAlgo";
-import '../app/styles/tablestyles.css'
+import AddAlgorithmButton from "./addAlgo"; // Assuming correct import
+import "../app/styles/tablestyles.css";
 
-const scrollbarWidth = () => {
-    const scrollDiv = document.createElement("div");
-    scrollDiv.setAttribute(
-        "style",
-        "width: 100px; height: 100px; overflow: scroll; position:absolute; top:-9999px;"
-    );
-    document.body && document.body.appendChild(scrollDiv);
-    const scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
-    document.body && document.body.removeChild(scrollDiv);
-    return scrollbarWidth;
-};
-
-const Table = () => {
+const TableViewer = ({ limitedData }) => {
     const [data, setData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [selectedHeaders, setSelectedHeaders] = useState({});
@@ -27,50 +15,64 @@ const Table = () => {
     const [showFilterHeader, setShowFilterHeader] = useState(null);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch("/data/dump.json");
-                if (!response.ok) {
-                    throw new Error("Failed to fetch data");
-                }
-                const jsonData = await response.json();
-                setData(jsonData);
+        if (limitedData) {
+            const headers = Object.keys(limitedData);
+            setHeaders(headers);
 
-                if (jsonData.length > 0) {
-                    const headers = Object.keys(jsonData[0]);
-                    setHeaders(headers);
-                }
-            } catch (error) {
-                console.error(error);
+            const dataArray = [];
+            for (let i = 0; i < 5; i++) {
+                const row = {};
+                headers.forEach(header => {
+                    row[header] = limitedData[header][i] !== undefined ? limitedData[header][i] : ''; // Handle undefined values
+                });
+                dataArray.push(row);
             }
-        };
-        fetchData();
-        const width = scrollbarWidth();
-        setScrollBarSize(width);
-    }, []);
+
+            setData(dataArray);
+
+            const initialSelectedHeaders = {};
+            headers.forEach(header => {
+                initialSelectedHeaders[header] = false;
+            });
+            setSelectedHeaders(initialSelectedHeaders);
+
+            const width = scrollbarWidth();
+            setScrollBarSize(width);
+        }
+    }, [limitedData]);
+
+    const scrollbarWidth = () => {
+        const scrollDiv = document.createElement("div");
+        scrollDiv.setAttribute(
+            "style",
+            "width: 100px; height: 100px; overflow: scroll; position:absolute; top:-9999px;"
+        );
+        document.body.appendChild(scrollDiv);
+        const scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+        document.body.removeChild(scrollDiv);
+        return scrollbarWidth;
+    };
 
     const toggleHeaderSelection = (header) => {
-        setSelectedHeaders((prevState) => {
-            const newState = { ...prevState, [header]: !prevState[header] };
-            return newState;
-        });
-        if (!selectedHeaders[header]) {
-            console.log(header);
-        }
+        setSelectedHeaders(prevSelectedHeaders => ({
+            ...prevSelectedHeaders,
+            [header]: !prevSelectedHeaders[header],
+        }));
+        console.log(header)
     };
 
     const toggleFilter = (header, e) => {
         e.stopPropagation();
         const rect = e.target.getBoundingClientRect();
         setFilterPosition({ top: rect.bottom, left: rect.left });
-        setShowFilter((prevState) => !prevState);
+        setShowFilter(true);
         setShowFilterHeader(header);
     };
 
     return (
         <VStack
-            width="95%"
-            margin="10px auto"
+            width="100%"
+            margin="0px auto"
             paddingX="25px"
             paddingY="20px"
             borderRadius="4px"
@@ -78,10 +80,8 @@ const Table = () => {
             align="center"
             spacing="12px"
             overflow="hidden"
-            borderColor="#E0E0E0"
-            borderWidth="1px"
         >
-            <Stack width="100%">
+            <Stack width="100%" align="center">
                 <Text fontFamily="Inter" fontWeight="bold" fontSize="20px" color="#000000" width="100%">
                     Visualize
                 </Text>
@@ -100,8 +100,8 @@ const Table = () => {
                             <thead>
                                 <tr>
                                     {headers.map((header, index) => (
-                                        <th 
-                                            key={index} 
+                                        <th
+                                            key={index}
                                             onClick={() => toggleHeaderSelection(header)}
                                             className={selectedHeaders[header] ? "selectedHeader" : ""}
                                         >
@@ -112,12 +112,12 @@ const Table = () => {
                                                 ml="15px"
                                                 onClick={(e) => toggleFilter(header, e)}
                                             >
-                                                <Icon 
-                                                    as={IoFilter} 
-                                                    boxSize={6} 
+                                                <Icon
+                                                    as={IoFilter}
+                                                    boxSize={6}
                                                     color="gray.500"
                                                     _hover={{ color: "gray.600" }}
-                                                    _active={{ color: "gray.900" }} 
+                                                    _active={{ color: "gray.900" }}
                                                 />
                                             </Button>
                                         </th>
@@ -127,8 +127,8 @@ const Table = () => {
                             <tbody>
                                 {data.map((item, index) => (
                                     <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
-                                        {headers.map((header, idx) => (
-                                            <td key={idx}>{item[header]}</td>
+                                        {headers.map((header) => (
+                                            <td key={header}>{item[header]}</td>
                                         ))}
                                     </tr>
                                 ))}
@@ -162,9 +162,9 @@ const Table = () => {
                         Bar
                     </Button>
                 </div>
-                <TableFilter 
-                    isVisible={showFilter} 
-                    position={filterPosition} 
+                <TableFilter
+                    isVisible={showFilter}
+                    position={filterPosition}
                     onClose={() => setShowFilter(false)}
                     header={showFilterHeader}
                 />
@@ -173,4 +173,4 @@ const Table = () => {
     );
 };
 
-export default Table;
+export default TableViewer;

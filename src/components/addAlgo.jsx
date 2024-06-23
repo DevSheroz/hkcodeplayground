@@ -19,7 +19,7 @@ const AddAlgorithmButton = ({ onClick }) => {
     // };
 
     return (
-        <Stack align="flex-end" maxWidth="90%" margin={"0 auto"}>
+        <Stack align="flex-end" maxWidth="100%" margin={"0 auto"}>
             <Menu>
                 <MenuButton
                     as={Button}

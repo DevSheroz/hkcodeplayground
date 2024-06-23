@@ -11,9 +11,9 @@ const Main = () => (
         <div>
             <DataInput />
         </div>
-        <div>
+        {/* <div>
             <TableViewer />
-        </div>
+        </div> */}
     </>
 );
 
