@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { VStack, Text, Button, Icon, Stack } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
 import TableFilter from "./TableFilter";
-import AddAlgorithmButton from "./addAlgo"; // Assuming correct import
+import AddAlgorithmButton from "./addAlgo";
 import "../app/styles/tablestyles.css";
 
-const TableViewer = ({ limitedData }) => {
+const TableViewer = ({ limitedData, fullData }) => {
     const [data, setData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [selectedHeaders, setSelectedHeaders] = useState({});
@@ -69,6 +69,28 @@ const TableViewer = ({ limitedData }) => {
         setShowFilterHeader(header);
     };
 
+    const handleAddAlgorithmResponse = (response) => {
+        const newHeaders = [...headers];
+        const newData = [...data];
+
+        Object.keys(response).forEach(key => {
+            if (!newHeaders.includes(key)) {
+                newHeaders.push(key);
+
+                newData.forEach((row, index) => {
+                    if (index === 0) {
+                        row[key] = response[key];
+                    } else {
+                        row[key] = '';
+                    }
+                });
+            }
+        });
+
+        setHeaders(newHeaders);
+        setData(newData);
+    };
+
     return (
         <VStack
             width="100%"
@@ -90,10 +112,10 @@ const TableViewer = ({ limitedData }) => {
                 </svg>
             </Stack>
             <div className="styles" data-scrollbar-width={scrollBarSize}>
-                <AddAlgorithmButton onClick={(e) => {
-                    e.preventDefault();
-                    console.log("Add Algorithm");
-                }} />
+                <AddAlgorithmButton
+                    fullData={fullData}
+                    onClick={handleAddAlgorithmResponse}
+                />
                 <div className="tableContainer">
                     <div className="tableWrap">
                         <table>

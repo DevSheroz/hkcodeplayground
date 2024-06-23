@@ -307,7 +307,7 @@ const DataInput = () => {
                 )}
             </Stack>
             {limitedData && (
-                <TableViewer limitedData={limitedData} />
+                <TableViewer limitedData={limitedData} fullData={fullData} />
             )}
         </VStack>
     );
