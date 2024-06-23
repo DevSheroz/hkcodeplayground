@@ -1,5 +1,5 @@
-import React from "react";
-import { Stack, Menu, MenuButton, MenuList, MenuItem, Button, Icon, chakra } from "@chakra-ui/react";
+import React, { useState } from "react";
+import { Stack, Menu, MenuButton, MenuList, MenuItem, Button, Icon, chakra, Spinner } from "@chakra-ui/react";
 import { BsPlusCircle } from "react-icons/bs";
 import Axios from "axios";
 
@@ -10,15 +10,22 @@ const BoldMenuItem = chakra(MenuItem, {
 });
 
 const AddAlgorithmButton = ({ onClick, fullData }) => {
+    const [isRunning, setIsRunning] = useState(false);
+
     const handleDSNClick = async () => {
         try {
+            setIsRunning(true); 
+
+            const AxValues = fullData.map(item => item.x);
+            const AyValues = fullData.map(item => item.z);
+
             const dataToSend = {
-                Ax: fullData.x,
-                Ay: fullData.z,
-                sample_rate: 10
+                Ax: AxValues,
+                Ay: AyValues,
+                sample_rate: 10 
             };
 
-            console.log(dataToSend);
+
             const response = await Axios.post(
                 "https://uk2lx44ubj.execute-api.ap-northeast-2.amazonaws.com/dev/dsn",
                 dataToSend
@@ -31,6 +38,8 @@ const AddAlgorithmButton = ({ onClick, fullData }) => {
             }
         } catch (error) {
             console.error("Error sending data:", error);
+        } finally {
+            setIsRunning(false);
         }
     };
 
@@ -57,7 +66,14 @@ const AddAlgorithmButton = ({ onClick, fullData }) => {
                     _active={{ color: "blue.700" }}
                     leftIcon={<Icon as={BsPlusCircle} boxSize={6} />}
                 >
-                    Add Algorithm
+                    {isRunning ? (
+                        <>
+                            <Spinner size="sm" color="blue.500" marginRight="2" />
+                            Running...
+                        </>
+                    ) : (
+                        <>Add Algorithm</>
+                    )}
                 </MenuButton>
                 <MenuList>
                     <BoldMenuItem onClick={() => handleMenuItemClick("DSN")}>DSN</BoldMenuItem>

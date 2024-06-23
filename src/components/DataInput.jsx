@@ -157,7 +157,6 @@ const DataInput = () => {
 
                 setProgress(50);
                 setLimitedData(response.data.limited_data);
-                // console.log(response.data);
 
                 // Check WebSocket state before sending a message
                 if (websocketRef.current.readyState === WebSocket.OPEN) {

@@ -6,23 +6,15 @@ from datetime import datetime
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.exceptions import InfluxDBError
 from dotenv import load_dotenv
-import asyncio
 
 app = FastAPI()
 
-# Load environment variables
 load_dotenv()
 
-# Environment variables for InfluxDB
 INFLUXDB_URL = os.getenv("INFLUXDB_URL")
 INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
 INFLUXDB_BUCKET = "hkcodeplayground"
-
-# Debug: Print the environment variables (don't do this in production!)
-print("INFLUXDB_URL:", INFLUXDB_URL)
-print("INFLUXDB_TOKEN:", INFLUXDB_TOKEN)
-print("INFLUXDB_ORG:", INFLUXDB_ORG)
 
 client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
 query_api = client.query_api()
@@ -39,10 +31,10 @@ def query_data_from_influxdb(item_no, start_date, end_date):
     veh_no = item_no.split(" ")[1]
 
     query = f'''
-        from(bucket: "{INFLUXDB_BUCKET}")
-            |> range(start: {start_date.isoformat()}Z, stop: {end_date.isoformat()}Z)
+        from(bucket: "hkcodeplayground")
+            |> range(start: {start_date.strftime('%Y-%m-%dT%H:%M:%SZ')}, stop: {end_date.strftime('%Y-%m-%dT%H:%M:%SZ')})
             |> filter(fn: (r) => r["_measurement"] == "IMU" and r["veh_no"] == "{veh_no}")
-            |> keep(columns: ["_time", "_field", "_value", "veh_no", "plate_no"])
+            |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
         '''
 
     try:
@@ -51,19 +43,27 @@ def query_data_from_influxdb(item_no, start_date, end_date):
         print(f"InfluxDB query error: {e}")
         raise
 
-    data_by_headers = {}
+    data_list = []
     for table in tables:
         for record in table.records:
-            field = record["_field"]
-            value = record["_value"]
-            if field not in data_by_headers:
-                data_by_headers[field] = []
-            data_by_headers[field].append(value)
-        
-    headers = list(data_by_headers.keys())
-    data = {header: data_by_headers[header] for header in headers}
+            if record is None:
+                continue
 
-    return headers, data
+            data = record.values
+
+            # Rename _time to timestamp and change time format
+            timestamp_str = data.pop('_time').strftime('%Y-%m-%d %H:%M:%S')
+            # Delete unwanted keys
+            del_key_list = ['result', 'table', '_start', '_stop', '_measurement', 'veh_no']
+            for key in del_key_list:
+                del data[key]
+
+            ordered_data = {'timestamp': timestamp_str}
+            ordered_data.update(data)
+
+            data_list.append(ordered_data)
+
+    return data_list
 
 @app.post("/load_data", response_class=JSONResponse)
 async def load_data_post(
@@ -75,21 +75,20 @@ async def load_data_post(
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
     try:
-        headers, data = query_data_from_influxdb(item_no, start_date, end_date)
-        limited_data = {header: values[:5] for header, values in data.items()}
+        data = query_data_from_influxdb(item_no, start_date, end_date)
+        limited_data = data[:5] 
     except Exception as e:
         print(f"Error loading data: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
-
-    return {"headers": headers, "limited_data": limited_data}
+    return {"limited_data": limited_data}
 
 async def stream_full_data(websocket: WebSocket, item_no: str, start_date: str, end_date: str):
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
     end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
     try:
-        headers, data = query_data_from_influxdb(item_no, start_date, end_date)
-        await websocket.send_json({"headers": headers, "full_data": data})
+        data = query_data_from_influxdb(item_no, start_date, end_date)
+        await websocket.send_json({"full_data": data})
     except Exception as e:
         print(f"Error streaming full data: {e}")
         await websocket.send_json({"error": str(e)})

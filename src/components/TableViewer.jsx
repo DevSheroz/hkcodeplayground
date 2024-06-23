@@ -15,20 +15,11 @@ const TableViewer = ({ limitedData, fullData }) => {
     const [showFilterHeader, setShowFilterHeader] = useState(null);
 
     useEffect(() => {
-        if (limitedData) {
-            const headers = Object.keys(limitedData);
+        if (limitedData.length > 0) {
+            const headers = Object.keys(limitedData[0]);
             setHeaders(headers);
 
-            const dataArray = [];
-            for (let i = 0; i < 5; i++) {
-                const row = {};
-                headers.forEach(header => {
-                    row[header] = limitedData[header][i] !== undefined ? limitedData[header][i] : ''; // Handle undefined values
-                });
-                dataArray.push(row);
-            }
-
-            setData(dataArray);
+            setData(limitedData);
 
             const initialSelectedHeaders = {};
             headers.forEach(header => {
@@ -58,7 +49,6 @@ const TableViewer = ({ limitedData, fullData }) => {
             ...prevSelectedHeaders,
             [header]: !prevSelectedHeaders[header],
         }));
-        console.log(header)
     };
 
     const toggleFilter = (header, e) => {
@@ -131,7 +121,7 @@ const TableViewer = ({ limitedData, fullData }) => {
                                             <Button
                                                 size="sm"
                                                 variant="unstyled"
-                                                ml="15px"
+                                                ml="10px"
                                                 onClick={(e) => toggleFilter(header, e)}
                                             >
                                                 <Icon
@@ -149,7 +139,7 @@ const TableViewer = ({ limitedData, fullData }) => {
                             <tbody>
                                 {data.map((item, index) => (
                                     <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
-                                        {headers.map((header) => (
+                                        {Object.keys(item).map((header) => (
                                             <td key={header}>{item[header]}</td>
                                         ))}
                                     </tr>
@@ -160,29 +150,29 @@ const TableViewer = ({ limitedData, fullData }) => {
                 </div>
                 <div className="vizButtonsContainer">
                     <Button
-                        size="sm"
-                        variant="solid"
-                        bg="blue.500"
-                        color="white"
-                        _hover={{ bg: "blue.600" }}
-                        _active={{ bg: "blue.700" }}
-                        width="100px"
-                        marginLeft="10px"
-                    >
-                        Trend
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="solid"
-                        bg="red.400"
-                        color="white"
-                        _hover={{ bg: "red.500" }}
-                        _active={{ bg: "red.600" }}
-                        width="100px"
-                        marginLeft="10px"
-                    >
-                        Bar
-                    </Button>
+                            size="sm"
+                            variant="solid"
+                            bg="blue.500"
+                            color="white"
+                            _hover={{ bg: "blue.600" }}
+                            _active={{ bg: "blue.700" }}
+                            width="100px"
+                            marginLeft="10px"
+                        >
+                            Trend
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="solid"
+                            bg="red.400"
+                            color="white"
+                            _hover={{ bg: "red.500" }}
+                            _active={{ bg: "red.600" }}
+                            width="100px"
+                            marginLeft="10px"
+                        >
+                            Bar
+                        </Button>
                 </div>
                 <TableFilter
                     isVisible={showFilter}
