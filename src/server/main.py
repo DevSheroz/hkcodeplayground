@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from datetime import datetime
@@ -10,6 +10,8 @@ from cache_redis import RedisCache
 from collections import defaultdict
 import json
 import os
+import requests
+
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -26,6 +28,11 @@ class ReadingData(BaseModel):
     end_date: datetime
     limit: Optional[int] = None
 
+class AlgorithmModel(BaseModel):
+    cache_key: str
+    algorith_name: str
+
+
 app = FastAPI()
 
 app.add_middleware(
@@ -38,9 +45,6 @@ app.add_middleware(
 
 influx_handler = InfluxDBHandler(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG)
 redis_cache = RedisCache()
-
-
-
 
 @app.post("/load_data", response_class=JSONResponse)
 async def load_data(item_no: str, start_date: str, end_date: str):
@@ -73,8 +77,33 @@ async def read_data(data: ReadingData):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get('/add_algorithm', response_class=JSONResponse)
+async def add_algorithm(cache_key: str = Query(...), algorithm_name: str = Query(...)):
+    try:
+        cached_data = await redis_cache.get(cache_key)
+        if not cached_data:
+            raise HTTPException(status_code=404, detail="Cache key not found")
+        
+        data_list = json.loads(cached_data)
 
+        if algorithm_name == "DSN":
+            AxValues = [item['x'] for item in data_list]
+            AyValues = [item['z'] for item in data_list]
+        
+            param = {
+                'Ax': AxValues,
+                'Ay': AyValues,
+                'sample_rate': 10
+            }
+            
+            external_api_url = f"https://uk2lx44ubj.execute-api.ap-northeast-2.amazonaws.com/dev/{algorithm_name.lower()}"
+            response = requests.post(external_api_url, json=param)
+            response_data = response.json()
 
+            return response_data
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

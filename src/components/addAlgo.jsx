@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Stack, Menu, MenuButton, MenuList, MenuItem, Button, Icon, chakra, Spinner } from "@chakra-ui/react";
 import { BsPlusCircle } from "react-icons/bs";
-import Axios from "axios";
+import axios from 'axios';
 
 const BoldMenuItem = chakra(MenuItem, {
     baseStyle: {
@@ -9,13 +9,20 @@ const BoldMenuItem = chakra(MenuItem, {
     },
 });
 
-const AddAlgorithmButton = ({ onClick, cacheKey }) => {
+const AddAlgorithmButton = ({ onClick, cacheKey, algorithmName }) => {
     const [isRunning, setIsRunning] = useState(false);
 
     const handleDSNClick = async () => {
         try {
             setIsRunning(true); 
 
+            const response = await axios.get("http://localhost:8001/add_algorithm", {
+                params: {
+                    cache_key: cacheKey,
+                    algorithm_name: "DSN",
+                },
+                withCredentials: true,
+            });
 
             if (onClick) {
                 onClick(response.data);
@@ -26,6 +33,7 @@ const AddAlgorithmButton = ({ onClick, cacheKey }) => {
             setIsRunning(false);
         }
     };
+
 
     const handleMenuItemClick = (algorithm) => {
         console.log(algorithm);
