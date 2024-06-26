@@ -5,7 +5,7 @@ import TableFilter from "./TableFilter";
 import AddAlgorithmButton from "./addAlgo";
 import "../app/styles/tablestyles.css";
 
-const TableViewer = ({ limitedData, fullData }) => {
+const TableViewer = ({ limitedData, cacheKey }) => {
     const [data, setData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [selectedHeaders, setSelectedHeaders] = useState({});
@@ -103,8 +103,8 @@ const TableViewer = ({ limitedData, fullData }) => {
             </Stack>
             <div className="styles" data-scrollbar-width={scrollBarSize}>
                 <AddAlgorithmButton
-                    fullData={fullData}
                     onClick={handleAddAlgorithmResponse}
+                    cacheKey = {cacheKey}
                 />
                 <div className="tableContainer">
                     <div className="tableWrap">

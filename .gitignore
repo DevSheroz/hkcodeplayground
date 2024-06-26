@@ -36,7 +36,8 @@ yarn-error.log*
 next-env.d.ts
 
 # vscode cache
-__pycache__
+__pycache__/
+src/api/__pycache__/
 
 # environment variables
 src/api/.env

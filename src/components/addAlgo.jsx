@@ -9,29 +9,13 @@ const BoldMenuItem = chakra(MenuItem, {
     },
 });
 
-const AddAlgorithmButton = ({ onClick, fullData }) => {
+const AddAlgorithmButton = ({ onClick, cacheKey }) => {
     const [isRunning, setIsRunning] = useState(false);
 
     const handleDSNClick = async () => {
         try {
             setIsRunning(true); 
 
-            const AxValues = fullData.map(item => item.x);
-            const AyValues = fullData.map(item => item.z);
-
-            const dataToSend = {
-                Ax: AxValues,
-                Ay: AyValues,
-                sample_rate: 10 
-            };
-
-
-            const response = await Axios.post(
-                "https://uk2lx44ubj.execute-api.ap-northeast-2.amazonaws.com/dev/dsn",
-                dataToSend
-            );
-
-            console.log("API response:", response.data);
 
             if (onClick) {
                 onClick(response.data);
@@ -48,7 +32,7 @@ const AddAlgorithmButton = ({ onClick, fullData }) => {
         if (algorithm === "DSN") {
             handleDSNClick();
         } else {
-            console.log(`Selected algorithm: ${algorithm}`);
+            console.log(`Not implemented algorithm: ${algorithm}`);
         }
     };
 

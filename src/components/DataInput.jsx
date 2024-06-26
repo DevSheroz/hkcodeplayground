@@ -23,53 +23,17 @@ const DataInput = () => {
     const [itemNoOptions, setItemNoOptions] = useState([]);
     const menuPortalTargetRef = useRef(null);
     const [loadingData, setLoadingData] = useState(false);
-    const [progress, setProgress] = useState(0);
-
-    const [limitedData, setLimitedData] = useState(null);  
-    const [fullData, setFullData] = useState(null);
-    const [loadingFullData, setLoadingFullData] = useState(false); // State for loading full data
-    
+    const [isIndeterminate, setIsIndeterminate] = useState(false);
+    const [limitedData, setLimitedData] = useState(null);
+    const [cacheKey, setCacheKey] = useState(null);
+    const [error, setError] = useState(null);
     const [renderPage, setRenderPage] = useState(false);
-    const [error, setError] = useState(null); // State for error handling
-
-    const websocketRef = useRef(null);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
             menuPortalTargetRef.current = document.body;
         }
         fetchReqNoOptions();
-
-        // Initialize WebSocket
-        websocketRef.current = new WebSocket("ws://localhost:8001/ws");
-
-        websocketRef.current.onopen = () => {
-            console.log("WebSocket connected");
-        };
-
-        websocketRef.current.onclose = () => {
-            console.log("WebSocket closed");
-        };
-
-        websocketRef.current.onerror = (error) => {
-            console.error("WebSocket error:", error);
-            setError("WebSocket connection error. Please try again later.");
-        };
-
-        websocketRef.current.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            if (message.full_data) {
-                setFullData(message.full_data);
-                setLoadingFullData(false);
-                setProgress(100);
-            }
-        };
-
-        return () => {
-            if (websocketRef.current.readyState === WebSocket.OPEN) {
-                websocketRef.current.close();
-            }
-        };
     }, []);
 
     const fetchReqNoOptions = async () => {
@@ -88,7 +52,7 @@ const DataInput = () => {
             console.error("Error fetching REQ_NO options:", error);
             setError("Failed to fetch REQ_NO options. Please check selected dates.");
         } finally {
-            setRenderPage(true); // Mark rendering as ready after fetching
+            setRenderPage(true);
         }
     };
 
@@ -136,14 +100,15 @@ const DataInput = () => {
 
     const handleLoadData = async () => {
         setLoadingData(true);
-        setProgress(20);  
-        setError(null) // setError message to null if data is loading
-
+        setIsIndeterminate(true);
+        setError(null);
+        setLimitedData(null);
+    
+        const startDate = selectedDates[0].toISOString();
+        const endDate = selectedDates[1].toISOString();
+    
         try {
-            const startDate = selectedDates[0].toISOString().split("T")[0];
-            const endDate = selectedDates[1].toISOString().split("T")[0];
-            
-            const response = await axios.post("http://localhost:8001/load_data", null, {
+            const limitedResponse = await axios.post("http://localhost:8001/load_data", null, {
                 params: {
                     item_no: selectedItemNo.value,
                     start_date: startDate,
@@ -151,35 +116,33 @@ const DataInput = () => {
                 },
                 withCredentials: true,
             });
-
-            if (response.status === 200) {
-                setLoadingFullData(true);
-
-                setProgress(50);
-                setLimitedData(response.data.limited_data);
-
-                // Check WebSocket state before sending a message
-                if (websocketRef.current.readyState === WebSocket.OPEN) {
-                    websocketRef.current.send(JSON.stringify({
-                        item_no: selectedItemNo.value,
-                        start_date: startDate,
-                        end_date: endDate,
-                    }));
-                } else {
-                    console.error("WebSocket is not open. Ready state:", websocketRef.current.readyState);
-                    setError("WebSocket connection is not open. Please try again later.");
-                }
+    
+            if (limitedResponse.status === 200 & limitedResponse.data.limited_data.length > 0) {
+                setLimitedData(limitedResponse.data.limited_data);
             } else {
-                console.error("Failed to load data:", response.statusText);
-                setProgress(0);
-                setError("Failed to load data. Please try again later.");
+                setError('Error: Data not found for selected dates or this request number.');
+                setLoadingData(false);
+                setIsIndeterminate(false);
+                return;
+            }
+    
+            const fullData = await axios.post("http://localhost:8001/full_data", {
+                item_no: selectedItemNo.value,
+                start_date: startDate,
+                end_date: endDate,
+            }, {
+                withCredentials: true,
+            });
+
+            if (fullData.status === 200) {
+                setCacheKey(fullData.data.cachekey);
             }
         } catch (error) {
-            console.error("Error loading data:", error);
-            setProgress(0);
-            setError("Error loading data. Please check selected dates.");
+            setError("Please check Request or Item number and try again");
+            setIsIndeterminate(false);
         } finally {
             setLoadingData(false);
+            setIsIndeterminate(false);
         }
     };
 
@@ -192,7 +155,6 @@ const DataInput = () => {
     }
 
     return (
-        
         <VStack
             width="95%"
             margin="10px auto"
@@ -226,7 +188,7 @@ const DataInput = () => {
                         placeholder="Select REQ No"
                         menuPortalTarget={menuPortalTargetRef.current}
                         menuPosition="fixed"
-                        styles={{ 
+                        styles={{
                             menuPortal: base => ({ ...base, zIndex: 9999 })
                         }}
                     />
@@ -242,7 +204,7 @@ const DataInput = () => {
                         placeholder="Select Test No"
                         menuPortalTarget={menuPortalTargetRef.current}
                         menuPosition="fixed"
-                        styles={{ 
+                        styles={{
                             menuPortal: base => ({ ...base, zIndex: 9999 })
                         }}
                     />
@@ -279,7 +241,7 @@ const DataInput = () => {
                 <Stack flex="20%" justify="flex-end" marginBottom="5px">
                     <Button
                         leftIcon={<BiUpload />}
-                        isLoading={loadingData || loadingFullData}
+                        isLoading={loadingData}
                         loadingText="Loading..."
                         onClick={handleLoadData}
                         colorScheme="blue"
@@ -290,10 +252,10 @@ const DataInput = () => {
                 </Stack>
             </Stack>
             <Stack width="100%">
-                {progress < 100 && (
-                    <Progress hasStripe value={progress} size="sm" colorScheme="blue" mt="4" />
+                {loadingData && (
+                    <Progress isIndeterminate={isIndeterminate} size="sm" colorScheme="blue" mt="4" />
                 )}
-                {progress === 100 && (
+                {loadingData && !isIndeterminate && (
                     <Text mt="4" fontWeight="semibold" color="green.500" align="center">
                         Full Load Completed!
                     </Text>
@@ -306,7 +268,7 @@ const DataInput = () => {
                 )}
             </Stack>
             {limitedData && (
-                <TableViewer limitedData={limitedData} fullData={fullData} />
+                <TableViewer limitedData={limitedData} cacheKey ={cacheKey} />
             )}
         </VStack>
     );

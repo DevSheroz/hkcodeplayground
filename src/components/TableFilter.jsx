@@ -34,7 +34,7 @@ const NumberFilter = ({ toggleNumberFilter, setSelectedFilter }) => {
             padding="10px"
             marginTop="20px"
         >
-            <Box onClick={() => handleOptionClick("=")} sx={boxStyle}>
+            <Box onClick={() => handleOptionClick("==")} sx={boxStyle}>
                 <Text>Equal</Text>
             </Box>
             <Box onClick={() => handleOptionClick("!=")} sx={boxStyle} borderBottom="0.5px solid #CBD5E0">
