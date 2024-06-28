@@ -157,7 +157,35 @@ async def reset(cache_key: str = Query(...)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 
+from typing import Dict
+@app.post("/plot")
+async def plot_data( columns: str = Query(...), cache_key: str = Query(...), plot: str = Query(...)):
+
+    # Process the data as needed
+    return {
+        "cache_key": cache_key,
+        "plot_type": plot,
+        "received_columns": columns
+    }
+    # try:
+    #     cached_data = await redis_cache.get(cache_key)
+    #     if cached_data is None:
+    #         raise HTTPException(status_code=404, detail="Cache key not found")
+
+    #     full_data = json.loads(cached_data)
+
+    #     subcache_key = f"{cache_key}:filtered"
+    #     subcached_data = await redis_cache.get(subcache_key)
+    #     if subcached_data:
+    #         filter_data = json.loads(subcached_data)
+    #         return {"full_data": len(full_data), "filtered_data": len(filter_data)}
+    #     else:
+    #         return {"full_data": len(full_data), "filtered_data": 0}
+
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

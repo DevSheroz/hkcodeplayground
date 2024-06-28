@@ -79,3 +79,8 @@ class DataFilter:
         smoothed_df[column] = smoothed_values
         
         return smoothed_df
+    
+
+
+
+    

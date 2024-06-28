@@ -112,7 +112,7 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
 
             if (response.status === 200) {
                 console.log("Filter", response.data);
-                onFilterApply(response.data.filtered_data); // Send updated data head to parent limitedData
+                onFilterApply(response.data.filtered_data); // Send updated data.head to parent limitedData
             }
         } catch (error) {
             console.error("Error", error.response.data);
@@ -136,7 +136,7 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
 
             if (response.status === 200) {
                 console.log("Reset", response.data);
-                onFilterApply(response.data.reset_data); // Send original_data
+                onFilterApply(response.data.reset_data); // Send original_data as reset
             }
         } catch (error) {
             console.error("Error", error.response.data);

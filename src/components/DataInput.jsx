@@ -161,7 +161,6 @@ const DataInput = ({ menuPortalTargetRef }) => {
 
         const startDate = toKSTISOString(selectedDates[0]);
         const endDate = toKSTISOString(selectedDates[1]);
-        console.log(startDate, endDate);
 
         try {
             const limitedResponse = await axios.post("http://localhost:8001/load_data", null, {
@@ -304,8 +303,8 @@ const DataInput = ({ menuPortalTargetRef }) => {
                     <Progress isIndeterminate={isIndeterminate} size="sm" colorScheme="blue" mt="4" />
                 )}
                 {!loadingData && cacheKey && !error && (
-                    <Text mt="4" fontWeight="semibold" color="green.500" align="center">
-                        Full Load Completed!
+                    <Text mt="4" fontWeight="bold" color="black" align="flex-start" ml="5px">
+                        데이터 조회 완료!
                     </Text>
                 )}
                 {error && (

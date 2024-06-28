@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { VStack, Text, Button, Icon, Stack } from "@chakra-ui/react";
+import { VStack, Text, Stack, Button, Icon } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
+import dynamic from 'next/dynamic';
 import TableFilter from "./TableFilter";
 import AddAlgorithmButton from "./addAlgo";
 import "../app/styles/tablestyles.css";
+
+const PlotViewer = dynamic(() => import('./PlotViewer'), { ssr: false });
 
 const TableViewer = ({ limitedData, cacheKey }) => {
     const [data, setData] = useState([]);
@@ -14,12 +17,12 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [filterPosition, setFilterPosition] = useState({ top: 0, left: 0 });
     const [showFilterHeader, setShowFilterHeader] = useState(null);
     const [filteredData, setFilteredData] = useState(limitedData);
+    const [selectedColumns, setSelectedColumns] = useState([]);
 
     useEffect(() => {
         if (filteredData.length > 0) {
             const headers = Object.keys(filteredData[0]);
             setHeaders(headers);
-
             setData(filteredData);
 
             const initialSelectedHeaders = {};
@@ -27,9 +30,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                 initialSelectedHeaders[header] = false;
             });
             setSelectedHeaders(initialSelectedHeaders);
-
-            const width = scrollbarWidth();
-            setScrollBarSize(width);
+            setScrollBarSize(scrollbarWidth());
         }
     }, [filteredData]);
 
@@ -46,10 +47,15 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     };
 
     const toggleHeaderSelection = (header) => {
-        setSelectedHeaders(prevSelectedHeaders => ({
-            ...prevSelectedHeaders,
-            [header]: !prevSelectedHeaders[header],
-        }));
+        setSelectedHeaders(prevSelectedHeaders => {
+            const updatedHeaders = {
+                ...prevSelectedHeaders,
+                [header]: !prevSelectedHeaders[header],
+            };
+            const selectedColumns = Object.keys(updatedHeaders).filter(key => updatedHeaders[key]);
+            setSelectedColumns(selectedColumns);
+            return updatedHeaders;
+        });
     };
 
     const toggleFilter = (header, e) => {
@@ -67,13 +73,8 @@ const TableViewer = ({ limitedData, cacheKey }) => {
         Object.keys(response).forEach(key => {
             if (!newHeaders.includes(key)) {
                 newHeaders.push(key);
-
                 newData.forEach((row, index) => {
-                    if (index === 0) {
-                        row[key] = response[key];
-                    } else {
-                        row[key] = '';
-                    }
+                    row[key] = index === 0 ? response[key] : '';
                 });
             }
         });
@@ -109,7 +110,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
             <div className="styles" data-scrollbar-width={scrollBarSize}>
                 <AddAlgorithmButton
                     onClick={handleAddAlgorithmResponse}
-                    cacheKey = {cacheKey}
+                    cacheKey={cacheKey}
                 />
                 <div className="tableContainer">
                     <div className="tableWrap">
@@ -144,7 +145,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                             <tbody>
                                 {data.map((item, index) => (
                                     <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
-                                        {Object.keys(item).map((header) => (
+                                        {headers.map((header) => (
                                             <td key={header}>{item[header]}</td>
                                         ))}
                                     </tr>
@@ -153,32 +154,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                         </table>
                     </div>
                 </div>
-                <div className="vizButtonsContainer">
-                    <Button
-                            size="sm"
-                            variant="solid"
-                            bg="blue.500"
-                            color="white"
-                            _hover={{ bg: "blue.600" }}
-                            _active={{ bg: "blue.700" }}
-                            width="100px"
-                            marginLeft="10px"
-                        >
-                            Trend
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="solid"
-                            bg="red.400"
-                            color="white"
-                            _hover={{ bg: "red.500" }}
-                            _active={{ bg: "red.600" }}
-                            width="100px"
-                            marginLeft="10px"
-                        >
-                            Bar
-                        </Button>
-                </div>
+                <PlotViewer cacheKey={cacheKey} selectedColumns={selectedColumns} />
                 <TableFilter
                     isVisible={showFilter}
                     position={filterPosition}
