@@ -10,3 +10,6 @@ class RedisCache:
 
     async def set(self, key, value, expire=3600):
         await self.redis.set(key, value, ex=expire)
+
+    async def delete(self, key):
+        await self.redis.delete(key)

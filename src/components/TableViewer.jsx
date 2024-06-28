@@ -13,13 +13,14 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [showFilter, setShowFilter] = useState(false);
     const [filterPosition, setFilterPosition] = useState({ top: 0, left: 0 });
     const [showFilterHeader, setShowFilterHeader] = useState(null);
+    const [filteredData, setFilteredData] = useState(limitedData);
 
     useEffect(() => {
-        if (limitedData.length > 0) {
-            const headers = Object.keys(limitedData[0]);
+        if (filteredData.length > 0) {
+            const headers = Object.keys(filteredData[0]);
             setHeaders(headers);
 
-            setData(limitedData);
+            setData(filteredData);
 
             const initialSelectedHeaders = {};
             headers.forEach(header => {
@@ -30,7 +31,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
             const width = scrollbarWidth();
             setScrollBarSize(width);
         }
-    }, [limitedData]);
+    }, [filteredData]);
 
     const scrollbarWidth = () => {
         const scrollDiv = document.createElement("div");
@@ -79,6 +80,10 @@ const TableViewer = ({ limitedData, cacheKey }) => {
 
         setHeaders(newHeaders);
         setData(newData);
+    };
+
+    const updateFilteredData = (newData) => {
+        setFilteredData(newData);
     };
 
     return (
@@ -179,6 +184,8 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     position={filterPosition}
                     onClose={() => setShowFilter(false)}
                     header={showFilterHeader}
+                    cacheKey={cacheKey}
+                    onFilterApply={updateFilteredData}
                 />
             </div>
         </VStack>

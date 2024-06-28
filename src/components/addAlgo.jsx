@@ -34,7 +34,6 @@ const AddAlgorithmButton = ({ onClick, cacheKey, algorithmName }) => {
         }
     };
 
-
     const handleMenuItemClick = (algorithm) => {
         console.log(algorithm);
         if (algorithm === "DSN") {
@@ -56,16 +55,9 @@ const AddAlgorithmButton = ({ onClick, cacheKey, algorithmName }) => {
                     textColor="blue.500"
                     _hover={{ color: "blue.600" }}
                     _active={{ color: "blue.700" }}
-                    leftIcon={<Icon as={BsPlusCircle} boxSize={6} />}
+                    leftIcon={isRunning ? <Spinner size="sm" color="blue.500" marginRight="2" /> : <Icon as={BsPlusCircle} boxSize={6} />}
                 >
-                    {isRunning ? (
-                        <>
-                            <Spinner size="sm" color="blue.500" marginRight="2" />
-                            Running...
-                        </>
-                    ) : (
-                        <>Add Algorithm</>
-                    )}
+                    {isRunning ? "Running..." : "Add Algorithm"}
                 </MenuButton>
                 <MenuList>
                     <BoldMenuItem onClick={() => handleMenuItemClick("DSN")}>DSN</BoldMenuItem>

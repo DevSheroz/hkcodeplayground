@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Checkbox, Stack, Button, Icon, Text, Input, Box } from '@chakra-ui/react';
 import { MdClear, MdArrowForwardIos } from 'react-icons/md';
+import axios from 'axios';
 
 const NumberFilter = ({ toggleNumberFilter, setSelectedFilter }) => {
     const boxStyle = {
@@ -16,10 +17,6 @@ const NumberFilter = ({ toggleNumberFilter, setSelectedFilter }) => {
 
     const handleOptionClick = (filter) => {
         setSelectedFilter(filter);
-        toggleNumberFilter();
-    };
-
-    const handleApply = () => {
         toggleNumberFilter();
     };
 
@@ -55,23 +52,11 @@ const NumberFilter = ({ toggleNumberFilter, setSelectedFilter }) => {
             <Box onClick={() => handleOptionClick("!= None")} sx={boxStyle}>
                 <Text>Not None</Text>
             </Box>
-            <Button 
-                width="80%"
-                height="20px"
-                colorScheme="blue" 
-                alignSelf="center"
-                margin={"10px 0"}
-                fontSize="12px"
-                borderRadius="3px"
-                onClick={handleApply}
-            >
-                Apply
-            </Button>
         </Box>
     );
 };
 
-const TableFilter = ({ isVisible, position, onClose, header }) => {
+const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterApply }) => {
     const [showNumberFilter, setShowNumberFilter] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState(null);
     const [inputValue, setInputValue] = useState("");
@@ -81,17 +66,14 @@ const TableFilter = ({ isVisible, position, onClose, header }) => {
         gaussian: false,
     });
 
-    // number filter handling (toggle to show/hide number filter)
     const toggleNumberFilter = () => {
         setShowNumberFilter(prevState => !prevState);
     };
 
-    // input value handling
     const handleInputChange = (e) => {
         setInputValue(e.target.value);
     };
 
-    // checkbox handling
     const handleCheckboxChange = (e) => {
         const { name, checked } = e.target;
         setCheckboxes(prevState => ({
@@ -100,7 +82,6 @@ const TableFilter = ({ isVisible, position, onClose, header }) => {
         }));
     };
 
-    // clear button handling
     const handleClear = () => {
         setSelectedFilter(null);
         setInputValue("");
@@ -111,16 +92,57 @@ const TableFilter = ({ isVisible, position, onClose, header }) => {
         });
     };
 
-    // apply button handling
-    const handleApply = () => {
+    const handleApply = async () => {
         const filterValues = {
             selectedFilter,
             inputValue,
             checkboxes,
             header,
         };
-        console.log(filterValues);
+
+        try {
+            const response = await axios.post("http://localhost:8001/filtering", {
+                filterValues
+            }, {
+                params: {
+                    cache_key: cacheKey
+                },
+                withCredentials: true,
+            });
+
+            if (response.status === 200) {
+                console.log("Filter", response.data);
+                onFilterApply(response.data.filtered_data); // Send updated data head to parent limitedData
+            }
+        } catch (error) {
+            console.error("Error", error.response.data);
+        }
+
         onClose();
+    };
+
+    const handleReset = async () => {
+        try {
+            const response = await axios.post(
+                "http://localhost:8001/reset",
+                {},
+                {
+                    params: {
+                        cache_key: cacheKey
+                    },
+                    withCredentials: true
+                }
+            );
+
+            if (response.status === 200) {
+                console.log("Reset", response.data);
+                onFilterApply(response.data.reset_data); // Send original_data
+            }
+        } catch (error) {
+            console.error("Error", error.response.data);
+        } finally {
+            onClose();
+        }
     };
 
     return isVisible ? (
@@ -230,18 +252,42 @@ const TableFilter = ({ isVisible, position, onClose, header }) => {
                         <Text fontSize="12px">Gaussian</Text>
                     </Checkbox>
                 </Stack>
-                <Button 
-                    width="80%"
-                    height="20px"
-                    colorScheme="blue" 
-                    alignSelf="center"
-                    margin={"10px 0"}
-                    fontSize="12px"
-                    borderRadius="3px"
-                    onClick={handleApply}
+                <Box 
+                    display="flex" 
+                    justifyContent="space-between" 
+                    alignItems="center" 
+                    width="100%" 
+                    margin="15px 0"
                 >
-                    Apply
-                </Button>
+                    <Button 
+                        width="40%"
+                        height="20px"
+                        bg="red.400"
+                        _hover={{ bg: "red.500" }}
+                        _active={{ bg: "red.600" }}
+                        textColor="white"
+                        fontSize="12px"
+                        borderRadius="3px"
+                        ml="10px"
+                        onClick={handleReset}
+                    >
+                        Reset
+                    </Button>
+                    <Button 
+                        width="40%" 
+                        height="20px"
+                        bg="blue.500"
+                        _hover={{ bg: "blue.600" }}
+                        _active={{ bg: "blue.700" }}
+                        textColor="white"
+                        fontSize="12px"
+                        borderRadius="3px"
+                        mr="10px"
+                        onClick={handleApply}
+                    >
+                        Apply
+                    </Button>
+                </Box>
             </Stack>
             {showNumberFilter && (
                 <Stack
