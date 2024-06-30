@@ -38,9 +38,9 @@ class BokehPlotter:
     def _get_colors(self):
         num_columns = len(self.columns)
         if num_columns == 1:
-            return ["blue"]
+            return ["#3182CE"]
         elif num_columns == 2:
-            return ["blue", "red"]
+            return ["#3182CE", "#F56565"]
         elif num_columns <= 10:
             return Category10[num_columns]
         else:
@@ -50,17 +50,19 @@ class BokehPlotter:
         try:
             p = figure(x_axis_type="datetime", title=f"Line Plot {self.typeof_data}", height=400, width=600)
             p.xaxis.formatter = DatetimeTickFormatter(
-                hours=["%m-%d %H:%M"],
-                days=["%m-%d %H:%M"],
-                months=["%m-%d %H:%M"],
-                years=["%m-%d %H:%M"],
+                hours="%m-%d %H:%M",
+                days="%m-%d %H:%M",
+                months="%m-%d %H:%M",
+                years="%m-%d %H:%M",
             )
+            
             colors = self._get_colors()
             logging.info(f"Colors used for plotting: {colors}")
             for idx, col in enumerate(self.columns):
                 p.line(self.df['timestamp'], self.df[col], legend_label=col, color=colors[idx])
+                # p.circle(self.df['timestamp'], self.df[col], legend_label=col, color=colors[idx], size=5)
 
-            p.legend.title = 'Columns'
+            p.legend.title = 'Data'
             p.xaxis.axis_label = 'Timestamp'
             p.yaxis.axis_label = 'Values'
 
@@ -70,16 +72,16 @@ class BokehPlotter:
             logging.error(traceback.format_exc())
             raise
 
+
     def bar_plot(self):
         try:
             p = figure(title=f"Histogram of {self.typeof_data}", height=400, width=600)
             colors = self._get_colors()
-            logging.info(f"Colors used for plotting: {colors}")
             for idx, col in enumerate(self.columns):
                 hist, edges = np.histogram(self.df[col], bins=30)
                 p.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:], fill_color=colors[idx], line_color="white", alpha=0.7, legend_label=col)
 
-            p.legend.title = 'Columns'
+            p.legend.title = 'Data'
             p.xaxis.axis_label = 'Values'
             p.yaxis.axis_label = 'Frequency'
 
