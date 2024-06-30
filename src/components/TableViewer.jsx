@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { VStack, Text, Stack, Button, Icon } from "@chakra-ui/react";
+import { VStack, Text, Stack, Button, Icon, Alert, AlertIcon } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
 import dynamic from 'next/dynamic';
 import TableFilter from "./TableFilter";
@@ -18,6 +18,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [showFilterHeader, setShowFilterHeader] = useState(null);
     const [filteredData, setFilteredData] = useState(limitedData);
     const [selectedColumns, setSelectedColumns] = useState([]);
+    const [showAlert, setShowAlert] = useState(false);
 
     useEffect(() => {
         if (filteredData.length > 0) {
@@ -87,6 +88,14 @@ const TableViewer = ({ limitedData, cacheKey }) => {
         setFilteredData(newData);
     };
 
+    const handleButtonClick = (plotType) => {
+        if (!selectedColumns || selectedColumns.length === 0) {
+            setShowAlert(true);
+            return;
+        }
+        setShowAlert(false);
+    };
+
     return (
         <VStack
             width="100%"
@@ -98,6 +107,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
             align="center"
             spacing="12px"
             overflow="hidden"
+            position="relative"
         >
             <Stack width="100%" align="center">
                 <Text fontFamily="Inter" fontWeight="bold" fontSize="20px" color="#000000" width="100%">
@@ -107,6 +117,12 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     <line x1="0" y1="0" x2="100%" y2="0" style={{ stroke: '#A0AEC0', strokeWidth: 1 }} />
                 </svg>
             </Stack>
+            {showAlert && (
+                <Alert status="warning" mb={4}>
+                    <AlertIcon />
+                    Please select at least one column first.
+                </Alert>
+            )}
             <div className="styles" data-scrollbar-width={scrollBarSize}>
                 <AddAlgorithmButton
                     onClick={handleAddAlgorithmResponse}

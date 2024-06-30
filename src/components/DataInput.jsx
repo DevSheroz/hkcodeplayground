@@ -15,7 +15,8 @@ import { BiUpload } from 'react-icons/bi';
 import { RangeDatepicker } from "chakra-dayzed-datepicker";
 import Select from "./ClientSelectData";
 import axios from "axios";
-import TableViewer from "./TableViewer"; // Import TableViewer component
+import TableViewer from "./TableViewer"; 
+import AnimatedBars from "./animatedBars";
 
 const TopBar = () => (
     <Stack
@@ -303,8 +304,8 @@ const DataInput = ({ menuPortalTargetRef }) => {
                     <Progress isIndeterminate={isIndeterminate} size="sm" colorScheme="blue" mt="4" />
                 )}
                 {!loadingData && cacheKey && !error && (
-                    <Text mt="4" fontWeight="bold" color="black" align="flex-start" ml="5px">
-                        데이터 조회 완료!
+                    <Text mt="4" fontWeight="bold" color="black" align="center" ml="5px">
+                        전체 데이터 조회 완료!
                     </Text>
                 )}
                 {error && (
@@ -334,9 +335,16 @@ const App = () => {
 
     if (!renderPage) {
         return (
-            <VStack width="95%" margin="10px auto" align="center">
-                <Spinner size="xl" color="blue.500" />
-            </VStack>
+            <VStack
+            width="95%"
+            height="100vh" 
+            margin="10px auto"
+            align="center"
+            justify="center"
+        >
+            <AnimatedBars />
+            {/* <Spinner size="xl" color="blue.500" /> */}
+        </VStack>
         );
     }
 

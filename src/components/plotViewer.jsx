@@ -1,36 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { embed } from '@bokeh/bokehjs';
-import { Button } from '@chakra-ui/react';
+import { Button, Alert, AlertIcon } from '@chakra-ui/react';
 import axios from 'axios';
 
 const PlotViewer = ({ cacheKey, selectedColumns }) => {
-    const [plotData, setPlotData] = useState(null);
+    const [fullPlotData, setFullPlotData] = useState(null);
+    const [filteredPlotData, setFilteredPlotData] = useState(null);
+    const [showAlert, setShowAlert] = useState(false);
 
     const fetchPlotData = async (cacheKey, plotType, columns) => {
         console.log(cacheKey, plotType, columns.toString());
         try {
-            const response = await axios.post("http://localhost:8001/plot", null,
-                {
-                    params: {columns: columns.toString(), cache_key: cacheKey, plot: plotType },
-                    withCredentials: true,
-                });
+            const response = await axios.post("http://localhost:8001/plot", null, {
+                params: { columns: columns.toString(), cache_key: cacheKey, plot: plotType },
+                withCredentials: true,
+            });
 
             console.log(response.data);
-            // setPlotData(response.data);
+            setFullPlotData(response.data.full_data);
+            setFilteredPlotData(response.data.filtered_data);
         } catch (error) {
             console.error('Error fetching plot data:', error);
         }
     };
 
     const handleButtonClick = (plotType) => {
+        if (!selectedColumns || selectedColumns.length === 0) {
+            setShowAlert(true);
+            return;
+        }
+        setShowAlert(false);
         fetchPlotData(cacheKey, plotType, selectedColumns);
     };
 
     useEffect(() => {
-        if (plotData && typeof document !== 'undefined') {
-            embed.embed_item(plotData, "bokeh-plot");
+        if (fullPlotData && typeof document !== 'undefined') {
+            const fullPlotDiv = document.getElementById("bokeh-plot-full");
+            if (fullPlotDiv) {
+                fullPlotDiv.innerHTML = "";
+                embed.embed_item(fullPlotData, "bokeh-plot-full");
+            }
         }
-    }, [plotData]);
+        if (filteredPlotData && typeof document !== 'undefined') {
+            const filteredPlotDiv = document.getElementById("bokeh-plot-filtered");
+            if (filteredPlotDiv) {
+                filteredPlotDiv.innerHTML = "";
+                embed.embed_item(filteredPlotData, "bokeh-plot-filtered");
+            }
+        }
+    }, [fullPlotData, filteredPlotData]);
 
     return (
         <div>
@@ -62,7 +80,22 @@ const PlotViewer = ({ cacheKey, selectedColumns }) => {
                     Bar
                 </Button>
             </div>
-            <div id="bokeh-plot"></div>
+            <div>
+                {showAlert && (
+                    <Alert status="warning" mb={4}>
+                        <AlertIcon />
+                        Please select at least one column first.
+                    </Alert>
+                )}
+            </div>
+            <div className="plotsContainer">
+                <div>
+                    <div id="bokeh-plot-full" style={{ minHeight: '400px' }}></div>
+                </div>
+                <div>
+                    <div id="bokeh-plot-filtered" style={{ minHeight: '400px' }}></div>
+                </div>
+            </div>
         </div>
     );
 };

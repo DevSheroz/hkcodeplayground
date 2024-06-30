@@ -147,7 +147,7 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
 
     return isVisible ? (
         <Stack 
-            position="absolute" 
+            position="fixed" 
             top={position.top} 
             left={position.left} 
             zIndex="1000" 
@@ -291,9 +291,9 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
             </Stack>
             {showNumberFilter && (
                 <Stack
-                    position="absolute"
-                    left="150px"
-                    top="0"
+                    position="fixed"
+                    left={`${position.left + 150}px`}
+                    top={position.top}
                 >
                     <NumberFilter 
                         toggleNumberFilter={toggleNumberFilter} 

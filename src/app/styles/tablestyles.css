@@ -3,7 +3,6 @@
 }
 
 .tableContainer {
-    /* max-width: 90%; */
     max-width: 100%;
     margin: 0 auto;
     margin-top: 10px;
@@ -29,7 +28,6 @@ thead tr {
     background: #fafafa;
     border-bottom: 1px solid #e1e1e1;
     border-right: 1px solid #e1e1e1;
-
 }
 
 thead th {
@@ -86,11 +84,23 @@ tbody td:last-child {
     display: flex;
     justify-content: flex-start;
     margin: 0 auto;
-    /* max-width: 90%; */
     max-width: 100%;
+    margin-bottom: 20px;
     padding: 10px;
     background-color: #f3f3f3; 
     border-bottom: 1px solid #e1e1e1;
     border-left: 1px solid #e1e1e1; 
     border-right: 1px solid #e1e1e1;
 }
+
+.plotsContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.plotsContainer > div {
+    flex: 1;
+    margin: 0 10px;
+}
+
