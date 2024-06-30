@@ -3,10 +3,11 @@ import { embed } from '@bokeh/bokehjs';
 import { Button, Alert, AlertIcon } from '@chakra-ui/react';
 import axios from 'axios';
 
-const PlotViewer = ({ cacheKey, selectedColumns }) => {
+const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared }) => {
     const [fullPlotData, setFullPlotData] = useState(null);
     const [filteredPlotData, setFilteredPlotData] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
+    const [isFilteredDataEmpty, setIsFilteredDataEmpty] = useState(false);
 
     const fetchPlotData = async (cacheKey, plotType, columns) => {
         console.log(cacheKey, plotType, columns.toString());
@@ -18,7 +19,11 @@ const PlotViewer = ({ cacheKey, selectedColumns }) => {
 
             console.log(response.data);
             setFullPlotData(response.data.full_data);
-            setFilteredPlotData(response.data.filtered_data);
+            if (response.data.filtered_data.length === 0) {
+                setIsFilteredDataEmpty(true);
+            } else {
+                setFilteredPlotData(response.data.filtered_data);
+            }
         } catch (error) {
             console.error('Error fetching plot data:', error);
         }
@@ -41,14 +46,32 @@ const PlotViewer = ({ cacheKey, selectedColumns }) => {
                 embed.embed_item(fullPlotData, "bokeh-plot-full");
             }
         }
-        if (filteredPlotData && typeof document !== 'undefined') {
+        if (filteredPlotData && typeof document !== 'undefined' && !isFilteredDataEmpty) {
             const filteredPlotDiv = document.getElementById("bokeh-plot-filtered");
             if (filteredPlotDiv) {
                 filteredPlotDiv.innerHTML = "";
                 embed.embed_item(filteredPlotData, "bokeh-plot-filtered");
             }
         }
-    }, [fullPlotData, filteredPlotData]);
+    }, [fullPlotData, filteredPlotData, isFilteredDataEmpty]);
+
+    useEffect(() => {
+        if (clearPlot) {
+            // Clear the plot data when clearPlot is true
+            setFullPlotData(null);
+            setFilteredPlotData(null);
+            setIsFilteredDataEmpty(false);
+            const fullPlotDiv = document.getElementById("bokeh-plot-full");
+            if (fullPlotDiv) {
+                fullPlotDiv.innerHTML = "";
+            }
+            const filteredPlotDiv = document.getElementById("bokeh-plot-filtered");
+            if (filteredPlotDiv) {
+                filteredPlotDiv.innerHTML = "";
+            }
+            onPlotsCleared(); // Call the onPlotsCleared callback
+        }
+    }, [clearPlot, onPlotsCleared]);
 
     return (
         <div>
@@ -89,12 +112,20 @@ const PlotViewer = ({ cacheKey, selectedColumns }) => {
                 )}
             </div>
             <div className="plotsContainer">
-                <div>
-                    <div id="bokeh-plot-full" style={{ minHeight: '400px' }}></div>
+                {isFilteredDataEmpty && (
+                    <Alert status="info" mb={4}>
+                        <AlertIcon />
+                        Filtered data is empty. Displaying full data plot.
+                    </Alert>
+                )}
+                <div style={{ textAlign: isFilteredDataEmpty ? 'center' : 'left' }}>
+                    <div id="bokeh-plot-full" style={{ minHeight: '400px', display: isFilteredDataEmpty ? 'block' : 'inline-block' }}></div>
                 </div>
-                <div>
-                    <div id="bokeh-plot-filtered" style={{ minHeight: '400px' }}></div>
-                </div>
+                {!isFilteredDataEmpty && (
+                    <div>
+                        <div id="bokeh-plot-filtered" style={{ minHeight: '400px' }}></div>
+                    </div>
+                )}
             </div>
         </div>
     );

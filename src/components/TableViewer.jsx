@@ -19,6 +19,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [filteredData, setFilteredData] = useState(limitedData);
     const [selectedColumns, setSelectedColumns] = useState([]);
     const [showAlert, setShowAlert] = useState(false);
+    const [clearPlot, setClearPlot] = useState(false);
 
     useEffect(() => {
         if (filteredData.length > 0) {
@@ -86,14 +87,15 @@ const TableViewer = ({ limitedData, cacheKey }) => {
 
     const updateFilteredData = (newData) => {
         setFilteredData(newData);
+        setSelectedColumns([]);
     };
 
-    const handleButtonClick = (plotType) => {
-        if (!selectedColumns || selectedColumns.length === 0) {
-            setShowAlert(true);
-            return;
-        }
-        setShowAlert(false);
+    const handlePlotClear = (clear) => {
+        setClearPlot(clear);
+    };
+
+    const handlePlotsCleared = () => {
+        setClearPlot(false);
     };
 
     return (
@@ -170,7 +172,12 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                         </table>
                     </div>
                 </div>
-                <PlotViewer cacheKey={cacheKey} selectedColumns={selectedColumns} />
+                <PlotViewer 
+                    cacheKey={cacheKey} 
+                    selectedColumns={selectedColumns} 
+                    clearPlot={clearPlot} 
+                    onPlotsCleared={handlePlotsCleared}
+                />
                 <TableFilter
                     isVisible={showFilter}
                     position={filterPosition}
@@ -178,6 +185,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     header={showFilterHeader}
                     cacheKey={cacheKey}
                     onFilterApply={updateFilteredData}
+                    plotClear={handlePlotClear}
                 />
             </div>
         </VStack>

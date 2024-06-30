@@ -97,6 +97,7 @@ tbody td:last-child {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    position: relative;
 }
 
 .plotsContainer > div {
