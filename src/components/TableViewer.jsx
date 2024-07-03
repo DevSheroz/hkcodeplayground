@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { VStack, Text, Stack, Button, Icon, Alert, AlertIcon } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
-import dynamic from 'next/dynamic';
 import TableFilter from "./TableFilter";
 import AddAlgorithmButton from "./addAlgo";
+import PlotViewer from "./plotDynamic";
 import "../app/styles/tablestyles.css";
 
-const PlotViewer = dynamic(() => import('./PlotViewer'), { ssr: false });
 
 const TableViewer = ({ limitedData, cacheKey }) => {
     const [data, setData] = useState([]);

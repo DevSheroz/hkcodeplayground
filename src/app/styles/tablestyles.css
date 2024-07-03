@@ -96,12 +96,13 @@ tbody td:last-child {
 .plotsContainer {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    position: relative;
+    justify-content: center;
+    align-items: center;
 }
 
 .plotsContainer > div {
     flex: 1;
-    margin: 0 10px;
+    margin: 10px auto;
+    min-width: 45%;
 }
 

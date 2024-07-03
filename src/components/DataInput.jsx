@@ -98,7 +98,7 @@ const DataInput = ({ menuPortalTargetRef }) => {
             }
         } catch (error) {
             console.error("Error fetching REQ_NO options:", error);
-            setError("Failed to fetch REQ_NO options. Please check selected dates.");
+            setError("Failed to fetch REQ_NO options. Please check your network connection.");
         }
     };
 

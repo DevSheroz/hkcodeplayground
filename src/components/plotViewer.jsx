@@ -118,13 +118,9 @@ const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared }) =>
                         Filtered data is empty. Displaying full data plot.
                     </Alert>
                 )}
-                <div style={{ textAlign: isFilteredDataEmpty ? 'center' : 'left' }}>
-                    <div id="bokeh-plot-full" style={{ minHeight: '400px', display: isFilteredDataEmpty ? 'block' : 'inline-block' }}></div>
-                </div>
+                    <div id="bokeh-plot-full" style={{ minHeight: '400px' }}></div>
                 {!isFilteredDataEmpty && (
-                    <div>
                         <div id="bokeh-plot-filtered" style={{ minHeight: '400px' }}></div>
-                    </div>
                 )}
             </div>
         </div>
