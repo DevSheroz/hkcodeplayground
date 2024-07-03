@@ -2,13 +2,13 @@ from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from datetime import datetime
-from pydantic import BaseModel
-from typing import Optional
 
 from db_influx import InfluxDBHandler
 from cache_redis import RedisCache
+from model import ReadingData, AlgorithmModel
 from filter import DataFilter
 from plot import BokehPlotter
+
 import json
 import os
 import requests
@@ -23,16 +23,6 @@ INFLUXDB_URL = os.getenv("INFLUXDB_URL")
 INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
 INFLUXDB_BUCKET = "hkcodeplayground"
-
-class ReadingData(BaseModel):
-    item_no: str
-    start_date: datetime
-    end_date: datetime
-    limit: Optional[int] = None
-
-class AlgorithmModel(BaseModel):
-    cache_key: str
-    algorith_name: str
 
 
 app = FastAPI()
