@@ -24,7 +24,6 @@ INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
 INFLUXDB_ORG = os.getenv("INFLUXDB_ORG")
 INFLUXDB_BUCKET = "hkcodeplayground"
 
-
 app = FastAPI()
 
 app.add_middleware(
@@ -38,7 +37,6 @@ app.add_middleware(
 influx_handler = InfluxDBHandler(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG)
 redis_cache = RedisCache()
 logging.basicConfig(level=logging.INFO)
-
 
 @app.post("/load_data", response_class=JSONResponse)
 async def load_data(item_no: str, start_date: str, end_date: str):
@@ -68,6 +66,18 @@ async def read_data(data: ReadingData):
         return {'cachekey': cache_key}
     
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/first_last_time")
+async def get_first_last_time(veh_no: str):
+    try:
+        veh_no = veh_no.split(" ")[1]
+        start_timestamp, end_timestamp = influx_handler.query_first_last_time(veh_no)
+
+        return {"start_timestamp": start_timestamp, "end_timestamp": end_timestamp}
+    
+    except Exception as e:
+        print(f"Error getting first and last time: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/add_algorithm", response_class=JSONResponse)
@@ -115,7 +125,7 @@ async def filtering(cache_key: str = Query(...), filter_parms: dict = Body(...))
         
 
         data_list = json.loads(cached_data)
-        print("received data lenght: ", len(data_list))
+        print("received data length: ", len(data_list))
         filter = filter_parms['filterValues']['selectedFilter']
         value = filter_parms['filterValues']['inputValue']
         checkboxes = filter_parms['filterValues']['checkboxes']
@@ -126,7 +136,7 @@ async def filtering(cache_key: str = Query(...), filter_parms: dict = Body(...))
         )
         filtered_df = filterClass.apply_filter()
         # filtering 후 결과물이 없을 시 error 전송
-        print("processed data lenght: ", len(filtered_df))
+        print("processed data length: ", len(filtered_df))
         if filtered_df.empty:
             raise HTTPException(status_code=404, detail="No data after filtering")
         
@@ -152,7 +162,6 @@ async def reset(cache_key: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-
 @app.post("/plot")
 async def plot_data(columns: str = Query(...), cache_key: str = Query(...), plot: str = Query(...)):
     try:

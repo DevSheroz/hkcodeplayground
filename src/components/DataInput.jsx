@@ -7,7 +7,6 @@ import {
     VStack,
     Button,
     Progress,
-    Spinner,
     Alert,
     AlertIcon,
 } from "@chakra-ui/react";
@@ -67,6 +66,8 @@ const TopBar = () => (
 
 const DataInput = ({ menuPortalTargetRef }) => {
     const [selectedDates, setSelectedDates] = useState([new Date(), new Date()]);
+    const [minDate, setMinDate] = useState(null);
+    const [maxDate, setMaxDate] = useState(null);
     const [selectedReqNo, setSelectedReqNo] = useState(null);
     const [selectedItemNo, setSelectedItemNo] = useState(null);
     const [reqNoOptions, setReqNoOptions] = useState([]);
@@ -144,21 +145,58 @@ const DataInput = ({ menuPortalTargetRef }) => {
         }
     };
 
+    useEffect(() => {
+        if (selectedItemNo) {
+            initDateRange(selectedItemNo);
+        }
+    }, [selectedItemNo]);
 
+    // 대한민국 timeZone offset 적용
+    const toKSTISOString = (date) => {
+        const kstOffset = 9 * 60 * 60 * 1000; // South Korea is UTC+9
+        const kstDate = new Date(date.getTime() + kstOffset);
+        const kstISOString = kstDate.toISOString().replace('Z', '+09:00');
+        return kstISOString;
+    };
 
+    // get start and end timestamp for selected Test No (aka vehicle)
+    const initDateRange = async (selectedItemNo) => {
+        if (selectedItemNo) {
+            try {
+                const dateRange = await axios.get(`http://localhost:8001/first_last_time?veh_no=${selectedItemNo.value}`);
+
+                if (dateRange.status === 200) {
+                    // timestamp retrieve, convert to ISO string, then split to get date only
+                    const firstDate = toKSTISOString(new Date(dateRange.data.start_timestamp)).split('T')[0];
+                    const lastDate = toKSTISOString(new Date(dateRange.data.end_timestamp)).split('T')[0];
+
+                    // Update selectedDates, minDate, and maxDate state
+                    const startDate = new Date(firstDate);
+                    const endDate = new Date(lastDate);
+
+                    // Subtract one day from startDate to make it clickable
+                    const minDate = new Date(startDate);
+                    minDate.setDate(startDate.getDate() - 1);
+
+                    setSelectedDates([startDate, endDate]);
+                    setMinDate(minDate);
+                    setMaxDate(endDate);
+                } else {
+                    console.error("Failed to fetch date range:", dateRange.statusText);
+                    setError("Driving data either does not exist or failed to retrieve.");
+                }
+            } catch (error) {
+                console.error('Error fetching date range:', error);
+                setError("Error fetching date range.");
+            }
+        }
+    };
 
     const handleLoadData = async () => {
         setLoadingData(true);
         setIsIndeterminate(true);
         setError(null);
         setLimitedData(null);
-
-        // 대한민국 timeZone offset 적용
-        function toKSTISOString(date) {
-            const kstOffset = 9 * 60; // South Korea is UTC+9
-            const utcDate = new Date(date.getTime() + (kstOffset * 60 * 1000));
-            return utcDate.toISOString();
-        }
 
         const startDate = toKSTISOString(selectedDates[0]);
         const endDate = toKSTISOString(selectedDates[1]);
@@ -264,6 +302,8 @@ const DataInput = ({ menuPortalTargetRef }) => {
                     <RangeDatepicker
                         selectedDates={selectedDates}
                         onDateChange={setSelectedDates}
+                        minDate={minDate}
+                        maxDate={maxDate}
                         configs={{
                             dateFormat: 'yyyy.MM.dd',
                         }}
@@ -272,7 +312,7 @@ const DataInput = ({ menuPortalTargetRef }) => {
                                 defaultBtnProps: {
                                     fontWeight: "regular",
                                     _hover: {
-                                        background: 'blue.400',
+                                        background: "blue.400",
                                     },
                                 },
                                 isInRangeBtnProps: {
@@ -281,6 +321,9 @@ const DataInput = ({ menuPortalTargetRef }) => {
                                 },
                                 selectedBtnProps: {
                                     background: "blue.200",
+                                },
+                                todayBtnProps: {
+                                    background: "teal.400",
                                 },
                             },
                         }}
@@ -336,15 +379,15 @@ const App = () => {
     if (!renderPage) {
         return (
             <VStack
-            width="95%"
-            height="100vh" 
-            margin="10px auto"
-            align="center"
-            justify="center"
-        >
-            <AnimatedBars />
-            {/* <Spinner size="xl" color="blue.500" /> */}
-        </VStack>
+                width="95%"
+                height="100vh"
+                margin="10px auto"
+                align="center"
+                justify="center"
+            >
+                <AnimatedBars />
+                {/* <Spinner size="xl" color="blue.500" /> */}
+            </VStack>
         );
     }
 

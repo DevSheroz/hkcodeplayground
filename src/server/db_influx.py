@@ -38,3 +38,32 @@ class InfluxDBHandler:
                 ordered_data.update(data)
                 data_list.append(ordered_data)
         return data_list
+    
+
+    def query_first_last_time(self, veh_no: str):
+        try:
+            query_first = f'''
+            from(bucket: "hkcodeplayground")
+                |> range(start: 0)
+                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["veh_no"] == "{veh_no}")
+                |> sort(columns: ["_time"], desc: false)
+                |> limit(n: 1)
+            '''
+            first_result = self.query_api.query(org=self.client.org, query=query_first)
+            first_time = first_result[0].records[0].get_time()
+
+            query_last = f'''
+            from(bucket: "hkcodeplayground")
+                |> range(start: 0)
+                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["veh_no"] == "{veh_no}")
+                |> sort(columns: ["_time"], desc: true)
+                |> limit(n: 1)
+            '''
+            last_result = self.query_api.query(org=self.client.org, query=query_last)
+            last_time = last_result[0].records[0].get_time()
+
+            return first_time, last_time
+
+        except InfluxDBError as e:
+            print(f"InfluxDB query error: {e}")
+            raise
