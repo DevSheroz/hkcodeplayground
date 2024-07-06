@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import TableFilter from "./TableFilter";
 import AddAlgorithmButton from "./addAlgo";
 import PlotViewer from "./plotDynamic";
-import AskAI from "./askAI";
+import ChatPrompt from "./askAI";
 import "../app/styles/tablestyles.css";
 
 const TableViewer = ({ limitedData, cacheKey }) => {
@@ -206,7 +206,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                         animate="visible"
                         variants={itemVariants}
                     >
-                        <AskAI />
+                        <ChatPrompt />
                     </motion.div>
                 )}
             </div>

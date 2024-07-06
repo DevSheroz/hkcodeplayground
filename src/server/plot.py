@@ -1,9 +1,7 @@
-import json
 from bokeh.plotting import figure, show
 from bokeh.embed import json_item
 from bokeh.palettes import Category10
 from bokeh.models import DatetimeTickFormatter
-from datetime import datetime
 import pandas as pd
 import numpy as np
 import logging

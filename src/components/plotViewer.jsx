@@ -46,6 +46,7 @@ const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared, onAs
     const handleAskAI = () => {
         console.log("AskAI clicked");
         onAskAI(true); // Update the parent state and clear plots
+        setShowAlert(false);
     };
 
     useEffect(() => {
