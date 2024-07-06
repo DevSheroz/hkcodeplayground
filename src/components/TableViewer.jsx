@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { VStack, Text, Stack, Button, Icon, Alert, AlertIcon } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
+import { motion } from 'framer-motion';
+
 import TableFilter from "./TableFilter";
 import AddAlgorithmButton from "./addAlgo";
 import PlotViewer from "./plotDynamic";
+import AskAI from "./askAI";
 import "../app/styles/tablestyles.css";
-
 
 const TableViewer = ({ limitedData, cacheKey }) => {
     const [data, setData] = useState([]);
@@ -19,6 +21,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [selectedColumns, setSelectedColumns] = useState([]);
     const [showAlert, setShowAlert] = useState(false);
     const [clearPlot, setClearPlot] = useState(false);
+    const [aiAsked, setAiAsked] = useState(false);
 
     useEffect(() => {
         if (filteredData.length > 0) {
@@ -97,12 +100,18 @@ const TableViewer = ({ limitedData, cacheKey }) => {
         setClearPlot(false);
     };
 
+    // styling for animation
+    const visible = { opacity: 1, y: 0, transition: { duration: 0.5 } };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 10 },
+        visible,
+    };
+
     return (
         <VStack
             width="100%"
             margin="0px auto"
-            paddingX="25px"
-            paddingY="20px"
             borderRadius="4px"
             justifyContent="space-between"
             align="center"
@@ -171,12 +180,6 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                         </table>
                     </div>
                 </div>
-                <PlotViewer 
-                    cacheKey={cacheKey} 
-                    selectedColumns={selectedColumns} 
-                    clearPlot={clearPlot} 
-                    onPlotsCleared={handlePlotsCleared}
-                />
                 <TableFilter
                     isVisible={showFilter}
                     position={filterPosition}
@@ -186,6 +189,26 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     onFilterApply={updateFilteredData}
                     plotClear={handlePlotClear}
                 />
+                <PlotViewer 
+                    cacheKey={cacheKey} 
+                    selectedColumns={selectedColumns} 
+                    clearPlot={clearPlot} 
+                    onPlotsCleared={handlePlotsCleared}
+                    onAskAI={(value) => {
+                        setAiAsked(value);
+                        setClearPlot(value); // Clear the plots when AI is asked
+                    }}
+                />
+                {aiAsked && (
+                    <motion.div
+                        key={`askAI-${aiAsked}`}
+                        initial="hidden"
+                        animate="visible"
+                        variants={itemVariants}
+                    >
+                        <AskAI />
+                    </motion.div>
+                )}
             </div>
         </VStack>
     );

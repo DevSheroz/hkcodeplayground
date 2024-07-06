@@ -113,11 +113,21 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
             if (response.status === 200) {
                 console.log("Filter", response.data);
                 onFilterApply(response.data.filtered_data); // Send updated data.head to parent limitedData
+                plotClear(true);
             }
         } catch (error) {
             console.error("Error", error.response.data);
         }
 
+        // Reset state for filter parameters
+        setSelectedFilter(null);
+        setInputValue("");
+        setCheckboxes({
+            iqr: false,
+            movingAvg: false,
+            gaussian: false,
+        });
+        
         onClose();
     };
 

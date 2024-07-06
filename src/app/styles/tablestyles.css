@@ -82,7 +82,8 @@ tbody td:last-child {
 
 .vizButtonsContainer {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
+    align-items: center;
     margin: 0 auto;
     max-width: 100%;
     margin-bottom: 20px;
@@ -91,6 +92,11 @@ tbody td:last-child {
     border-bottom: 1px solid #e1e1e1;
     border-left: 1px solid #e1e1e1; 
     border-right: 1px solid #e1e1e1;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 10px;
 }
 
 .plotsContainer {
