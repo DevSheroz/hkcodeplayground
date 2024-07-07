@@ -8,6 +8,7 @@ from cache_redis import RedisCache
 from model import ReadingData, AlgorithmModel
 from filter import DataFilter
 from plot import BokehPlotter
+from agent import DataAnalysisAgent
 
 import json
 import os
@@ -193,6 +194,30 @@ async def plot_data(columns: str = Query(...), cache_key: str = Query(...), plot
 
     except Exception as e:
         logging.error(f"Error generating plot: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/chat")
+async def ask_ai(cache_key: str = Query(...), query: str = Query(...)):
+
+    try:
+        subcache_key = f"{cache_key}:filtered"
+        cached_data = await redis_cache.get(subcache_key)
+
+        if cached_data is None:
+            cached_data = await redis_cache.get(cache_key)
+
+            if cached_data is None:
+                raise HTTPException(status_code=404, detail="Cache key not found")
+
+        data = json.loads(cached_data)
+
+        ai = DataAnalysisAgent(data, query)
+        response = ai.handle_query(query)
+        print(f"Printing the response here: {response}")
+        return response
+
+    except Exception as e:
+        logging.error(f"Error in /chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

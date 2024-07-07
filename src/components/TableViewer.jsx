@@ -206,7 +206,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                         animate="visible"
                         variants={itemVariants}
                     >
-                        <ChatPrompt />
+                        <ChatPrompt cacheKey={cacheKey} />
                     </motion.div>
                 )}
             </div>
