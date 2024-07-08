@@ -196,7 +196,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     onPlotsCleared={handlePlotsCleared}
                     onAskAI={(value) => {
                         setAiAsked(value);
-                        setClearPlot(value); // Clear the plots when AI is asked
+                        setClearPlot(value); 
                     }}
                 />
                 {aiAsked && (

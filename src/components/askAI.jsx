@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Input, InputGroup, InputRightElement, Text } from '@chakra-ui/react';
+import { Box, Button, Input, InputGroup, InputRightElement, Text, Image, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import axios from 'axios';
@@ -44,6 +44,7 @@ const GeneratingDots = styled.div`
 
 const ChatPrompt = ({ cacheKey }) => {
     const [message, setMessage] = useState('');
+    const [chatResponse, setChatResponse] = useState(null);  // Store the response
     const [isLoading, setIsLoading] = useState(false);
 
     const handleSend = async () => {
@@ -57,17 +58,16 @@ const ChatPrompt = ({ cacheKey }) => {
             setIsLoading(true);
 
             try {
-                const response = await axios.post('http://localhost:8001/chat', null, {
+                const res = await axios.post('http://localhost:8001/chat', null, {
                     params: {
                         query: message,
                         cache_key: cacheKey
                     }
                 });
 
-                if (response.status === 200) {
-                    console.log(response.data);
-                } else {
-                    console.error('Error:', response.status, response.statusText);
+                if (res.status === 200) {
+                    console.log(res.data);
+                    setChatResponse(res.data); 
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -85,15 +85,40 @@ const ChatPrompt = ({ cacheKey }) => {
         }
     };
 
+    const renderDataFrame = (dataFrame) => {
+        const columns = Object.keys(dataFrame[0]);
+        return (
+            <Table variant="simple">
+                <Thead>
+                    <Tr>
+                        {columns.map((col) => (
+                            <Th key={col}>{col}</Th>
+                        ))}
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {dataFrame.map((row, index) => (
+                        <Tr key={index}>
+                            {columns.map((col) => (
+                                <Td key={col}>{row[col]}</Td>
+                            ))}
+                        </Tr>
+                    ))}
+                </Tbody>
+            </Table>
+        );
+    };
+
     return (
         <Box 
             display="flex" 
+            flexDirection="column" 
             alignItems="center" 
             p={2} 
             bg="gray.50" 
             borderRadius="10px" 
             boxShadow="sm" 
-            width={{ base: '100%', md: '50%' }} 
+            width={{ base: '100%', md: '70%' }} 
             mx="auto"
         >
             <InputGroup size="md" position="relative">
@@ -166,6 +191,21 @@ const ChatPrompt = ({ cacheKey }) => {
                     </motion.div>
                 </InputRightElement>
             </InputGroup>
+            {!isLoading && chatResponse && (chatResponse.type === 'string' || chatResponse.type === 'number' || chatResponse.type === 'error') && (
+                <Text mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%">
+                    Response: {chatResponse.value}
+                </Text>
+            )}
+            {!isLoading && chatResponse && chatResponse.type === 'plot' && (
+                <Box mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" height="100%" display="flex" justifyContent="center">
+                    <img src={chatResponse.value} alt="Plot" />
+                </Box>
+            )}
+            {!isLoading && chatResponse && chatResponse.type === 'dataframe' && (
+                <Box mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" display="flex" justifyContent="center">
+                    {renderDataFrame(JSON.parse(chatResponse.value))}
+                </Box>
+            )}
         </Box>
     );
 };

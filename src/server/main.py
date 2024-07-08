@@ -211,9 +211,8 @@ async def ask_ai(cache_key: str = Query(...), query: str = Query(...)):
 
         data = json.loads(cached_data)
 
-        ai = DataAnalysisAgent(data, query)
-        response = ai.handle_query(query)
-        print(f"Printing the response here: {response}")
+        pandasAI = DataAnalysisAgent(data, query)
+        response = pandasAI.handle_query(query)
         return response
 
     except Exception as e:
