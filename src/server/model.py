@@ -4,10 +4,11 @@ from typing import Optional
 from datetime import datetime
 
 class ReadingData(BaseModel):
+    req_no: str
     item_no: str
     start_date: datetime
     end_date: datetime
-    limit: Optional[int] = None
+    # limit: Optional[int] = None
 
 class AlgorithmModel(BaseModel):
     cache_key: str

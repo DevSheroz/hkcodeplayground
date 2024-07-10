@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Input, InputGroup, InputRightElement, Text, Image, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
@@ -46,23 +46,46 @@ const ChatPrompt = ({ cacheKey }) => {
     const [message, setMessage] = useState('');
     const [chatResponse, setChatResponse] = useState(null);  // Store the response
     const [isLoading, setIsLoading] = useState(false);
+    const controllerRef = useRef(null); // Reference to store the AbortController
+    const responseRef = useRef(null); // Reference to the response Box
+
+    useEffect(() => {
+        // Clean up on component unmount
+        return () => {
+            if (controllerRef.current) {
+                controllerRef.current.abort();
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (chatResponse && responseRef.current) {
+            responseRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+    }, [chatResponse]);
 
     const handleSend = async () => {
         if (message.trim() !== '' || isLoading) {
             if (isLoading) {
                 setIsLoading(false);
+                if (controllerRef.current) {
+                    controllerRef.current.abort(); // Abort the request
+                }
                 return;
             }
 
             console.log(message, cacheKey);
             setIsLoading(true);
 
+            controllerRef.current = new AbortController(); // Create a new AbortController
+
             try {
                 const res = await axios.post('http://localhost:8001/chat', null, {
                     params: {
                         query: message,
                         cache_key: cacheKey
-                    }
+                    },
+                    signal: controllerRef.current.signal // Pass the signal to the request
                 });
 
                 if (res.status === 200) {
@@ -70,7 +93,11 @@ const ChatPrompt = ({ cacheKey }) => {
                     setChatResponse(res.data); 
                 }
             } catch (error) {
-                console.error('Error:', error);
+                if (axios.isCancel(error)) {
+                    console.log('Request canceled', error.message);
+                } else {
+                    console.error('Error:', error);
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -120,6 +147,7 @@ const ChatPrompt = ({ cacheKey }) => {
             boxShadow="sm" 
             width={{ base: '100%', md: '70%' }} 
             mx="auto"
+            style={{ scrollBehavior: 'smooth' }} // Enable smooth scrolling
         >
             <InputGroup size="md" position="relative">
                 {isLoading ? (
@@ -191,22 +219,24 @@ const ChatPrompt = ({ cacheKey }) => {
                     </motion.div>
                 </InputRightElement>
             </InputGroup>
-            {!isLoading && chatResponse && (chatResponse.type === 'string' || chatResponse.type === 'number' || chatResponse.type === 'error') && (
-                <Text mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%">
-                    Response: {chatResponse.value}
-                </Text>
-            )}
-            {!isLoading && chatResponse && chatResponse.type === 'plot' && (
-                <Box mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" height="100%" display="flex" justifyContent="center">
-                    <img src={chatResponse.value} alt="Plot" />
-                </Box>
-            )}
-            {!isLoading && chatResponse && chatResponse.type === 'dataframe' && (
-                <Box mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" display="flex" justifyContent="center">
-                    {renderDataFrame(JSON.parse(chatResponse.value))}
-                </Box>
-            )}
-        </Box>
+                {!isLoading && chatResponse && (chatResponse.type === 'string' || chatResponse.type === 'number' || chatResponse.type === 'error') && (
+                    <Box ref={responseRef} mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%">
+                        <Text>
+                            Response: {chatResponse.value}
+                        </Text>
+                    </Box>
+                )}
+                {!isLoading && chatResponse && chatResponse.type === 'plot' && (
+                    <Box ref={responseRef} mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" height="100%" display="flex" justifyContent="center">
+                        <img src={chatResponse.value} alt="Plot" />
+                    </Box>
+                )}
+                {!isLoading && chatResponse && chatResponse.type === 'dataframe' && (
+                    <Box ref={responseRef} mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" display="flex" justifyContent="center">
+                        {renderDataFrame(JSON.parse(chatResponse.value))}
+                    </Box>
+                )}
+            </Box>
     );
 };
 

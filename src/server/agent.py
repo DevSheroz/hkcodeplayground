@@ -20,6 +20,8 @@ class DataAnalysisAgent:
         self.azure_endpoint = os.getenv('AZURE_ENDPOINT')
         self.azure_deployment = os.getenv('AZURE_DEPLOYMENT')
         self.openai_api_version = os.getenv('OPENAI_API_VERSION')
+        # save_chart_path = f"./temp_charts/{user}"
+
 
         self.llm = AzureOpenAI(
             deployment_name=self.azure_deployment,
@@ -31,8 +33,13 @@ class DataAnalysisAgent:
             self.df,
             config={
                 "llm": self.llm,
-                "description": "You are a data analysis agent. Your main goal is to help non-technical users to analyze data.",
-                "verbose": True,
+                "description": "You are a data analysis agent. Your main goal is to help non-technical users to analyze data. \
+                Check columns for datetime like values and if type is string, convert to datetime.",
+                "verbose": False,
+                "open_charts": False,
+                # "save_chart_path": save_chart_path,
+                "save_charts": False,
+
             }
         )
 

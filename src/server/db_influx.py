@@ -7,12 +7,13 @@ class InfluxDBHandler:
         self.client = InfluxDBClient(url=url, token=token, org=org)
         self.query_api = self.client.query_api()
 
-    def query_data_from_influxdb(self, item_no: str, start_date: datetime, end_date: datetime, limit: int = None):
+    def query_data_from_influxdb(self, req_no: str, item_no: str, start_date: datetime, end_date: datetime, limit: int = None):
         veh_no = item_no.split(" ")[1]
+
         query = f'''
             from(bucket: "hkcodeplayground")
                 |> range(start: {start_date.strftime('%Y-%m-%dT%H:%M:%SZ')}, stop: {end_date.strftime('%Y-%m-%dT%H:%M:%SZ')})
-                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["veh_no"] == "{veh_no}")
+                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["req_no"] == "{req_no}" and r["veh_no"] == "{veh_no}")
                 |> sort(columns: ["_time"], desc: false)
             '''
         if limit is not None:
@@ -40,12 +41,12 @@ class InfluxDBHandler:
         return data_list
     
 
-    def query_first_last_time(self, veh_no: str):
+    def query_first_last_time(self, req_no:str, veh_no: str):
         try:
             query_first = f'''
             from(bucket: "hkcodeplayground")
                 |> range(start: 0)
-                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["veh_no"] == "{veh_no}")
+                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["req_no"] == "{req_no}" and r["veh_no"] == "{veh_no}")
                 |> sort(columns: ["_time"], desc: false)
                 |> limit(n: 1)
             '''
@@ -55,7 +56,7 @@ class InfluxDBHandler:
             query_last = f'''
             from(bucket: "hkcodeplayground")
                 |> range(start: 0)
-                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["veh_no"] == "{veh_no}")
+                |> filter(fn: (r) => r["_measurement"] == "IMU" and r["req_no"] == "{req_no}" and r["veh_no"] == "{veh_no}")
                 |> sort(columns: ["_time"], desc: true)
                 |> limit(n: 1)
             '''

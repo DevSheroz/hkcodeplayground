@@ -40,12 +40,12 @@ redis_cache = RedisCache()
 logging.basicConfig(level=logging.INFO)
 
 @app.post("/load_data", response_class=JSONResponse)
-async def load_data(item_no: str, start_date: str, end_date: str):
+async def load_data(req_no: str, item_no: str, start_date: str, end_date: str):
     try:
         start_date_dt = datetime.fromisoformat(start_date)
         end_date_dt = datetime.fromisoformat(end_date)
-        print('limited data loaded')
-        data = influx_handler.query_data_from_influxdb(item_no, start_date_dt, end_date_dt, limit=5)
+
+        data = influx_handler.query_data_from_influxdb(req_no, item_no, start_date_dt, end_date_dt, limit=5)
         limited_data = data
     except Exception as e:
         print(f"Error loading data: {e}")
@@ -53,8 +53,8 @@ async def load_data(item_no: str, start_date: str, end_date: str):
     return {"limited_data": limited_data}
 
 @app.post('/full_data/', response_class=JSONResponse)
-async def read_data(data: ReadingData):
-    cache_key = f"{data.item_no}_{data.start_date}_{data.end_date}"
+async def read_data(body: ReadingData):
+    cache_key = f"{body.item_no}_{body.start_date}_{body.end_date}"
     cached_data = await redis_cache.get(cache_key)
     if cached_data:
         print(f"Cache hit for key: {cache_key}")
@@ -62,7 +62,7 @@ async def read_data(data: ReadingData):
     
     try:
         print(f"Cache miss for key: {cache_key}. Querying InfluxDB.")
-        result = influx_handler.query_data_from_influxdb(data.item_no, data.start_date, data.end_date, data.limit)
+        result = influx_handler.query_data_from_influxdb(body.req_no, body.item_no, body.start_date, body.end_date)
         await redis_cache.set(cache_key, json.dumps(result))
         return {'cachekey': cache_key}
     
@@ -70,10 +70,10 @@ async def read_data(data: ReadingData):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/first_last_time")
-async def get_first_last_time(veh_no: str):
+async def get_first_last_time(req_no: str, veh_no: str):
     try:
-        veh_no = veh_no.split(" ")[1]
-        start_timestamp, end_timestamp = influx_handler.query_first_last_time(veh_no)
+        veh = veh_no.split(" ")[1]
+        start_timestamp, end_timestamp = influx_handler.query_first_last_time(req_no,veh)
 
         return {"start_timestamp": start_timestamp, "end_timestamp": end_timestamp}
     

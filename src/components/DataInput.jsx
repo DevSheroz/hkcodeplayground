@@ -17,6 +17,7 @@ import axios from "axios";
 import TableViewer from "./TableViewer"; 
 import AnimatedBars from "./animatedBars";
 
+
 const TopBar = () => (
     <Stack
         width="95%"
@@ -146,10 +147,10 @@ const DataInput = ({ menuPortalTargetRef }) => {
     };
 
     useEffect(() => {
-        if (selectedItemNo) {
-            initDateRange(selectedItemNo);
+        if (selectedReqNo && selectedItemNo) {
+            initDateRange(selectedReqNo, selectedItemNo);
         }
-    }, [selectedItemNo]);
+    }, [selectedReqNo, selectedItemNo]);
 
     // 대한민국 timeZone offset 적용
     const toKSTISOString = (date) => {
@@ -160,12 +161,13 @@ const DataInput = ({ menuPortalTargetRef }) => {
     };
 
     // get start and end timestamp for selected Test No (aka vehicle)
-    const initDateRange = async (selectedItemNo) => {
-        if (selectedItemNo) {
+    const initDateRange = async (selectedReqNo, selectedItemNo) => {
+        if (selectedItemNo && selectedItemNo) {
             try {
-                const dateRange = await axios.get(`http://localhost:8001/first_last_time?veh_no=${selectedItemNo.value}`);
-
+                const dateRange = await axios.get(`http://localhost:8001/first_last_time?req_no=${selectedReqNo.value}&veh_no=${selectedItemNo.value}`);
+                
                 if (dateRange.status === 200) {
+                    
                     // timestamp retrieve, convert to ISO string, then split to get date only
                     const firstDate = toKSTISOString(new Date(dateRange.data.start_timestamp)).split('T')[0];
                     const lastDate = toKSTISOString(new Date(dateRange.data.end_timestamp)).split('T')[0];
@@ -181,6 +183,10 @@ const DataInput = ({ menuPortalTargetRef }) => {
                     setSelectedDates([startDate, endDate]);
                     setMinDate(minDate);
                     setMaxDate(endDate);
+                    setError(null); // error message reset
+                    setLimitedData(null); // reset table rendering
+                    setCacheKey(null); // reset previous data
+                    
                 } else {
                     console.error("Failed to fetch date range:", dateRange.statusText);
                     setError("Driving data either does not exist or failed to retrieve.");
@@ -204,6 +210,7 @@ const DataInput = ({ menuPortalTargetRef }) => {
         try {
             const limitedResponse = await axios.post("http://localhost:8001/load_data", null, {
                 params: {
+                    req_no: selectedReqNo.value,
                     item_no: selectedItemNo.value,
                     start_date: startDate,
                     end_date: endDate,
@@ -220,13 +227,28 @@ const DataInput = ({ menuPortalTargetRef }) => {
                 return;
             }
 
-            const fullData = await axios.post("http://localhost:8001/full_data", {
-                item_no: selectedItemNo.value,
-                start_date: startDate,
-                end_date: endDate,
-            }, {
-                withCredentials: true,
-            });
+
+            if (limitedResponse.status === 200 && limitedResponse.data.limited_data.length > 0) {
+                setLimitedData(limitedResponse.data.limited_data);
+            } else {
+                setError('Error: Data not found for selected dates or this request number.');
+                setLoadingData(false);
+                setIsIndeterminate(false);
+                return;
+            }
+
+            const fullData = await axios.post(
+                "http://localhost:8001/full_data",
+                {
+                    req_no: selectedReqNo.value,
+                    item_no: selectedItemNo.value,
+                    start_date: startDate,
+                    end_date: endDate,
+                },
+                {
+                    withCredentials: true,
+                }
+            );
 
             if (fullData.status === 200) {
                 setCacheKey(fullData.data.cachekey);
