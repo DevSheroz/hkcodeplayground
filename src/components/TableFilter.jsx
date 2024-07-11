@@ -56,7 +56,7 @@ const NumberFilter = ({ toggleNumberFilter, setSelectedFilter }) => {
     );
 };
 
-const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterApply, plotClear }) => {
+const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterApply, plotClear, onReset }) => {
     const [showNumberFilter, setShowNumberFilter] = useState(false);
     const [selectedFilter, setSelectedFilter] = useState(null);
     const [inputValue, setInputValue] = useState("");
@@ -112,7 +112,7 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
 
             if (response.status === 200) {
                 console.log("Filter", response.data);
-                onFilterApply(response.data.filtered_data); // Send updated data.head to parent limitedData
+                onFilterApply(response.data.filtered_data, header); // Send updated data.head to parent limitedData
                 plotClear(true);
             }
         } catch (error) {
@@ -146,7 +146,7 @@ const TableFilter = ({ isVisible, position, onClose, header, cacheKey, onFilterA
 
             if (response.status === 200) {
                 console.log("Reset", response.data);
-                onFilterApply(response.data.reset_data); // Send original_data as reset
+                onReset(response.data.reset_data); // Send original_data as reset
                 plotClear(true);
             }
         } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { VStack, Text, Stack, Button, Icon, Alert, AlertIcon } from "@chakra-ui/react";
+import { VStack, Text, Stack, Button, Icon, Alert, AlertIcon, Box } from "@chakra-ui/react";
 import { IoFilter } from "react-icons/io5";
 import { motion } from 'framer-motion';
 
@@ -22,6 +22,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [showAlert, setShowAlert] = useState(false);
     const [clearPlot, setClearPlot] = useState(false);
     const [aiAsked, setAiAsked] = useState(false);
+    const [filteredColumns, setFilteredColumns] = useState([]);  // Maintain filtered columns
 
     useEffect(() => {
         if (filteredData.length > 0) {
@@ -64,6 +65,11 @@ const TableViewer = ({ limitedData, cacheKey }) => {
 
     const toggleFilter = (header, e) => {
         e.stopPropagation();
+        if (showFilter && showFilterHeader === header) {
+            setShowFilter(false);
+            return;
+        }
+
         const rect = e.target.getBoundingClientRect();
         setFilterPosition({ top: rect.bottom, left: rect.left });
         setShowFilter(true);
@@ -87,9 +93,10 @@ const TableViewer = ({ limitedData, cacheKey }) => {
         setData(newData);
     };
 
-    const updateFilteredData = (newData) => {
+    const updateFilteredData = (newData, column) => {
         setFilteredData(newData);
         setSelectedColumns([]);
+        setFilteredColumns(prev => [...prev, column]);  // Add the new column to the list of filtered columns
     };
 
     const handlePlotClear = (clear) => {
@@ -98,6 +105,13 @@ const TableViewer = ({ limitedData, cacheKey }) => {
 
     const handlePlotsCleared = () => {
         setClearPlot(false);
+    };
+
+    const handleReset = (resetData) => {
+        setFilteredData(resetData);
+        setFilteredColumns([]);
+        setSelectedColumns([]);
+        setClearPlot(true);
     };
 
     // styling for animation
@@ -147,23 +161,30 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                                         <th
                                             key={index}
                                             onClick={() => toggleHeaderSelection(header)}
-                                            className={selectedHeaders[header] ? "selectedHeader" : ""}
+                                            className={`${selectedHeaders[header] ? "selectedHeader" : ""} ${filteredColumns.includes(header) ? "filteredHeader" : ""}`}
                                         >
-                                            <span>{header}</span>
-                                            <Button
-                                                size="sm"
-                                                variant="unstyled"
-                                                ml="10px"
-                                                onClick={(e) => toggleFilter(header, e)}
-                                            >
-                                                <Icon
-                                                    as={IoFilter}
-                                                    boxSize={6}
-                                                    color="gray.500"
-                                                    _hover={{ color: "gray.600" }}
-                                                    _active={{ color: "gray.900" }}
-                                                />
-                                            </Button>
+                                            <div className="headerWrapper">
+                                                {filteredColumns.includes(header) && (
+                                                    <Box className="filteredLabel">
+                                                        Filtered
+                                                    </Box>
+                                                )}
+                                                <span>{header}</span>
+                                                <Button
+                                                    size="sm"
+                                                    variant="unstyled"
+                                                    ml="10px"
+                                                    onClick={(e) => toggleFilter(header, e)}
+                                                >
+                                                    <Icon
+                                                        as={IoFilter}
+                                                        boxSize={6}
+                                                        color="gray.500"
+                                                        _hover={{ color: "gray.600" }}
+                                                        _active={{ color: "gray.900" }}
+                                                    />
+                                                </Button>
+                                            </div>
                                         </th>
                                     ))}
                                 </tr>
@@ -171,8 +192,18 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                             <tbody>
                                 {data.map((item, index) => (
                                     <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
-                                        {headers.map((header) => (
-                                            <td key={header}>{item[header]}</td>
+                                        {headers.map((header, cellIndex) => (
+                                            <td 
+                                                key={header} 
+                                                className={`${
+                                                    filteredColumns.includes(header) ? 
+                                                    index === 0 ? "filteredColumnTop" : 
+                                                    index === data.length - 1 ? "filteredColumnBottom" : 
+                                                    "filteredColumnMiddle" : 
+                                                    ""
+                                                }`}>
+                                                {item[header]}
+                                            </td>
                                         ))}
                                     </tr>
                                 ))}
@@ -188,6 +219,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     cacheKey={cacheKey}
                     onFilterApply={updateFilteredData}
                     plotClear={handlePlotClear}
+                    onReset={handleReset}  
                 />
                 <PlotViewer 
                     cacheKey={cacheKey} 
