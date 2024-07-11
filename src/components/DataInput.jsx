@@ -185,7 +185,7 @@ const DataInput = ({ menuPortalTargetRef }) => {
                     setMaxDate(endDate);
                     setError(null); // error message reset
                     setLimitedData(null); // reset table rendering
-                    setCacheKey(null); // reset previous data
+                    setCacheKey(null); // reset previous
                     
                 } else {
                     console.error("Failed to fetch date range:", dateRange.statusText);
@@ -287,7 +287,7 @@ const DataInput = ({ menuPortalTargetRef }) => {
             <Stack className="classDataInput" width="100%" height="auto" direction="row">
                 <Stack flex="30%" margin="5px">
                     <Text mb="8px" fontFamily="Inter" fontWeight="semibold">
-                        REQ No:
+                        Request No:
                     </Text>
                     <Select
                         value={selectedReqNo}
