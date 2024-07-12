@@ -5,6 +5,7 @@
 .tableContainer {
     max-width: 100%;
     margin: 0 auto;
+
 }
 
 .tableWrap {
@@ -35,7 +36,7 @@ thead th {
     border-right: 1px solid #e1e1e1;
     padding: 0.5rem;
     min-width: 120px;
-    position: relative; /* Ensure the label is positioned relative to the th */
+    position: relative;
 }
 
 thead th:last-child {
@@ -43,8 +44,7 @@ thead th:last-child {
 }
 
 .selectedHeader {
-    border-top: 2px solid gray;
-    border-bottom: 2px solid gray;
+    background-color: #d3d3d3;
 }
 
 tbody tr {
@@ -85,27 +85,8 @@ tbody td:last-child {
     position: relative;
 }
 
-.filteredHeader {
-    border-top: 2px solid #ED8936;
-    border-left: 2px solid #ED8936;
-    border-right: 2px solid #ED8936;
-    position: relative;
-}
-
-.filteredColumnTop {
-    border-left: 2px solid #ED8936;
-    border-right: 2px solid #ED8936;
-}
-
-.filteredColumnMiddle {
-    border-left: 2px solid #ED8936;
-    border-right: 2px solid #ED8936;
-}
-
-.filteredColumnBottom {
-    border-left: 2px solid #ED8936;
-    border-right: 2px solid #ED8936;
-    border-bottom: 2px solid #ED8936;
+.tableWrap > table {
+    border-collapse: collapse;
 }
 
 
@@ -114,7 +95,7 @@ tbody td:last-child {
     top: -28px; 
     left: 0;
     transform: translateX(-10px); 
-    background-color: #ED8936;
+    background-color: #235D79;
     color: white;
     padding: 2px 5px;
     font-size: 10px;

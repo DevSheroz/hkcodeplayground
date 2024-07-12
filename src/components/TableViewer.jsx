@@ -22,8 +22,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [showAlert, setShowAlert] = useState(false);
     const [clearPlot, setClearPlot] = useState(false);
     const [aiAsked, setAiAsked] = useState(false);
-    const [filteredColumns, setFilteredColumns] = useState([]);  // Maintain filtered columns
-
+    const [filteredColumns, setFilteredColumns] = useState([]);  
     useEffect(() => {
         if (filteredData.length > 0) {
             const headers = Object.keys(filteredData[0]);
@@ -96,7 +95,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const updateFilteredData = (newData, column) => {
         setFilteredData(newData);
         setSelectedColumns([]);
-        setFilteredColumns(prev => [...prev, column]);  // Add the new column to the list of filtered columns
+        setFilteredColumns(prev => [...prev, column]);  
     };
 
     const handlePlotClear = (clear) => {
@@ -114,12 +113,15 @@ const TableViewer = ({ limitedData, cacheKey }) => {
         setClearPlot(true);
     };
 
-    // styling for animation
-    const visible = { opacity: 1, y: 0, transition: { duration: 0.5 } };
+    // Animation variants for filtered label and border styling
+    const filterLabelVariants = {
+        hidden: { opacity: 0, y: -10, x:-10, transition: { duration: 0.1 } },
+        visible: { opacity: 1, y: 0, x:-10, transition: { duration: 0.1 } },
+    };
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 10 },
-        visible,
+    const borderVariants = {
+        hidden: { borderColor: "transparent", borderWidth: "0px" },
+        visible: { borderColor: "#235D79", borderWidth: "2px", transition: { duration: 0.2 } },
     };
 
     return (
@@ -155,59 +157,66 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                 <div className="tableContainer">
                     <div className="tableWrap">
                         <table>
-                            <thead>
-                                <tr>
-                                    {headers.map((header, index) => (
-                                        <th
-                                            key={index}
-                                            onClick={() => toggleHeaderSelection(header)}
-                                            className={`${selectedHeaders[header] ? "selectedHeader" : ""} ${filteredColumns.includes(header) ? "filteredHeader" : ""}`}
-                                        >
-                                            <div className="headerWrapper">
-                                                {filteredColumns.includes(header) && (
-                                                    <Box className="filteredLabel">
-                                                        Filtered
-                                                    </Box>
-                                                )}
-                                                <span>{header}</span>
-                                                <Button
-                                                    size="sm"
-                                                    variant="unstyled"
-                                                    ml="10px"
-                                                    onClick={(e) => toggleFilter(header, e)}
+                        <thead>
+                            <tr>
+                                {headers.map((header, index) => (
+                                    <motion.th
+                                        key={index}
+                                        onClick={() => toggleHeaderSelection(header)}
+                                        className={`${selectedHeaders[header] ? "selectedHeader" : ""}`}
+                                        initial="hidden"
+                                        animate={filteredColumns.includes(header) ? "visible" : "hidden"}
+                                        variants={borderVariants}
+                                        style={{borderBottom: "none"}}
+                                    >
+                                        <div className="headerWrapper">
+                                            {filteredColumns.includes(header) && (
+                                                <motion.div
+                                                    className="filteredLabel"
+                                                    initial="hidden"
+                                                    animate="visible"
+                                                    variants={filterLabelVariants}
                                                 >
-                                                    <Icon
-                                                        as={IoFilter}
-                                                        boxSize={6}
-                                                        color="gray.500"
-                                                        _hover={{ color: "gray.600" }}
-                                                        _active={{ color: "gray.900" }}
-                                                    />
-                                                </Button>
-                                            </div>
-                                        </th>
+                                                    Filtered
+                                                </motion.div>
+                                            )}
+                                            <span>{header}</span>
+                                            <Button
+                                                size="sm"
+                                                variant="unstyled"
+                                                ml="10px"
+                                                onClick={(e) => toggleFilter(header, e)}
+                                            >
+                                                <Icon
+                                                    as={IoFilter}
+                                                    boxSize={6}
+                                                    color="gray.500"
+                                                    _hover={{ color: "gray.600" }}
+                                                    _active={{ color: "gray.900" }}
+                                                />
+                                            </Button>
+                                        </div>
+                                    </motion.th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data.map((item, index) => (
+                                <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
+                                    {headers.map((header, cellIndex) => (
+                                        <motion.td
+                                            key={header}
+                                            initial="hidden"
+                                            animate={filteredColumns.includes(header) ? "visible" : "hidden"}
+                                            variants={borderVariants}
+                                            style={{ borderBottom: index === data.length - 1 ? '2px solid #235D79' : 'none', borderTop: 'none' }}
+                                        >
+                                            {item[header]}
+                                        </motion.td>
                                     ))}
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {data.map((item, index) => (
-                                    <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
-                                        {headers.map((header, cellIndex) => (
-                                            <td 
-                                                key={header} 
-                                                className={`${
-                                                    filteredColumns.includes(header) ? 
-                                                    index === 0 ? "filteredColumnTop" : 
-                                                    index === data.length - 1 ? "filteredColumnBottom" : 
-                                                    "filteredColumnMiddle" : 
-                                                    ""
-                                                }`}>
-                                                {item[header]}
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
+                            ))}
+                        </tbody>
                         </table>
                     </div>
                 </div>
@@ -219,7 +228,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                     cacheKey={cacheKey}
                     onFilterApply={updateFilteredData}
                     plotClear={handlePlotClear}
-                    onReset={handleReset}  
+                    onReset={handleReset}  // Handle reset from the TableFilter
                 />
                 <PlotViewer 
                     cacheKey={cacheKey} 
@@ -236,7 +245,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                         key={`askAI-${aiAsked}`}
                         initial="hidden"
                         animate="visible"
-                        variants={itemVariants}
+                        variants={filterLabelVariants}
                     >
                         <ChatPrompt cacheKey={cacheKey} />
                     </motion.div>
