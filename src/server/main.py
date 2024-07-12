@@ -198,21 +198,21 @@ async def plot_data(columns: str = Query(...), cache_key: str = Query(...), plot
     
 @app.post("/chat")
 async def ask_ai(cache_key: str = Query(...), query: str = Query(...)):
-
     try:
         subcache_key = f"{cache_key}:filtered"
         cached_data = await redis_cache.get(subcache_key)
 
         if cached_data is None:
             cached_data = await redis_cache.get(cache_key)
-
             if cached_data is None:
                 raise HTTPException(status_code=404, detail="Cache key not found")
 
         data = json.loads(cached_data)
 
-        pandasAI = DataAnalysisAgent(data, query)
-        response = pandasAI.handle_query(query)
+        # Initialize the DataAnalysisAgent with the data and query
+        pandas_ai = DataAnalysisAgent(data, query)
+        response = pandas_ai.handle_query()
+        print("!!!!!!!!",response)
         return response
 
     except Exception as e:

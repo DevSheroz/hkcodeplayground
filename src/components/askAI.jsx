@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, Input, InputGroup, InputRightElement, Text, Image, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
+import { Box, Button, Input, InputGroup, InputRightElement, Text, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import axios from 'axios';
@@ -113,26 +113,31 @@ const ChatPrompt = ({ cacheKey }) => {
     };
 
     const renderDataFrame = (dataFrame) => {
-        const columns = Object.keys(dataFrame[0]);
+        const { columns, index, data } = dataFrame;
+    
         return (
-            <Table variant="simple">
-                <Thead>
-                    <Tr>
-                        {columns.map((col) => (
-                            <Th key={col}>{col}</Th>
-                        ))}
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {dataFrame.map((row, index) => (
-                        <Tr key={index}>
+            <Box overflowX="auto" maxWidth="100%">
+                <Table variant="simple">
+                    <Thead>
+                        <Tr>
+                            <Th>Index</Th>
                             {columns.map((col) => (
-                                <Td key={col}>{row[col]}</Td>
+                                <Th key={col}>{col}</Th>
                             ))}
                         </Tr>
-                    ))}
-                </Tbody>
-            </Table>
+                    </Thead>
+                    <Tbody>
+                        {data.map((row, rowIndex) => (
+                            <Tr key={rowIndex}>
+                                <Td>{index[rowIndex]}</Td>
+                                {row.map((cell, cellIndex) => (
+                                    <Td key={cellIndex}>{cell}</Td>
+                                ))}
+                            </Tr>
+                        ))}
+                    </Tbody>
+                </Table>
+            </Box>
         );
     };
 
@@ -144,8 +149,8 @@ const ChatPrompt = ({ cacheKey }) => {
             p={2} 
             bg="gray.50" 
             borderRadius="10px" 
-            boxShadow="sm" 
-            width={{ base: '100%', md: '70%' }} 
+            boxShadow="0 0 10px rgba(0, 0, 0, 0.1)"
+            width={{ base: '100%', md: '60%' }} 
             mx="auto"
             style={{ scrollBehavior: 'smooth' }} // Enable smooth scrolling
         >
@@ -161,7 +166,7 @@ const ChatPrompt = ({ cacheKey }) => {
                         borderColor="gray.300"
                         borderRadius="30px"
                         _hover={{ borderColor: 'gray.500' }}
-                        _focus={{ borderColor: 'gray.600', boxShadow: '0 0 0 1px gray.500' }}
+                        _focus={{ borderColor: 'gray.600'}}
                     >
                         <Text mr={2} fontStyle="italic" color="gray.500">Generating</Text>
                         <GeneratingDots>
@@ -232,7 +237,7 @@ const ChatPrompt = ({ cacheKey }) => {
                     </Box>
                 )}
                 {!isLoading && chatResponse && chatResponse.type === 'dataframe' && (
-                    <Box ref={responseRef} mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" display="flex" justifyContent="center">
+                    <Box ref={responseRef} mt={4} p={2} bg="gray.50" borderRadius="10px" width="100%" overflowX="auto">
                         {renderDataFrame(JSON.parse(chatResponse.value))}
                     </Box>
                 )}

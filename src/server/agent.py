@@ -1,5 +1,5 @@
 import pandas as pd
-from pandasai import Agent
+from pandasai import Agent, SmartDataframe
 from pandasai.llm import AzureOpenAI
 import matplotlib.pyplot as plt
 
@@ -10,40 +10,38 @@ from io import StringIO, BytesIO
 import base64
 import logging
 
+# Load environment variables from .env file
 load_dotenv('../api/.env')
 
 class DataAnalysisAgent:
     def __init__(self, df, query: str):
-        self.df = pd.DataFrame(df)
+        self.data = pd.DataFrame(df)
         self.query = query
+
+        # Load Azure OpenAI credentials from environment variables
         self.api_key = os.getenv('API_KEY')
         self.azure_endpoint = os.getenv('AZURE_ENDPOINT')
         self.azure_deployment = os.getenv('AZURE_DEPLOYMENT')
         self.openai_api_version = os.getenv('OPENAI_API_VERSION')
-        # save_chart_path = f"./temp_charts/{user}"
-
 
         self.llm = AzureOpenAI(
-            deployment_name=self.azure_deployment,
-            api_version=self.openai_api_version,
-            api_token=self.api_key,
-            azure_endpoint=self.azure_endpoint,
-        )
-        self.agent = Agent(
-            self.df,
-            config={
+                    deployment_name=self.azure_deployment,
+                    api_version=self.openai_api_version,
+                    api_token=self.api_key,
+                    azure_endpoint=self.azure_endpoint,
+                )
+
+    def initialize_df(self):
+        self.df = SmartDataframe(self.data, config={
                 "llm": self.llm,
-                "description": "You are a data analysis agent. Your main goal is to help non-technical users to analyze data. \
-                Check columns for datetime like values and if type is string, convert to datetime.",
+                "description": "You are a data analysis agent. Your main goal is to help non-technical users to analyze data.",
                 "verbose": False,
                 "open_charts": False,
-                # "save_chart_path": save_chart_path,
                 "save_charts": False,
+            })
+        return self.df
 
-            }
-        )
-
-    def handle_query(self, query):
+    def handle_query(self):
         logger = logging.getLogger('pandasai.helpers.logger')
         logger.setLevel(logging.INFO)
 
@@ -51,7 +49,9 @@ class DataAnalysisAgent:
         log_handler = logging.StreamHandler(log_stream)
         logger.addHandler(log_handler)
         
-        response = self.agent.chat(query)
+        df = self.initialize_df()
+
+        response = df.chat(self.query)
 
         # Process the log content
         log_handler.flush()
@@ -73,8 +73,7 @@ class DataAnalysisAgent:
                     return {"type": result_type, "value": f"data:image/png;base64,{plot_url}"}
                 
                 elif result_type == 'dataframe':
-                    dataframe_json = self.df.to_json(orient="records")
-                    print(dataframe_json)
+                    dataframe_json = response.to_json(orient="split")
                     return {"type": result_type, "value": dataframe_json}
                 
                 return {"type": result_type, "value": response}

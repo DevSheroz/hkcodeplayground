@@ -23,6 +23,7 @@ const TableViewer = ({ limitedData, cacheKey }) => {
     const [clearPlot, setClearPlot] = useState(false);
     const [aiAsked, setAiAsked] = useState(false);
     const [filteredColumns, setFilteredColumns] = useState([]);  
+
     useEffect(() => {
         if (filteredData.length > 0) {
             const headers = Object.keys(filteredData[0]);
@@ -201,15 +202,20 @@ const TableViewer = ({ limitedData, cacheKey }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {data.map((item, index) => (
-                                <tr key={index} className={index % 2 === 0 ? "even" : "odd"}>
-                                    {headers.map((header, cellIndex) => (
+                            {data.map((item, rowIndex) => (
+                                <tr key={rowIndex} className={rowIndex % 2 === 0 ? "even" : "odd"}>
+                                    {headers.map((header, colIndex) => (
                                         <motion.td
-                                            key={header}
+                                            key={colIndex}
                                             initial="hidden"
                                             animate={filteredColumns.includes(header) ? "visible" : "hidden"}
                                             variants={borderVariants}
-                                            style={{ borderBottom: index === data.length - 1 ? '2px solid #235D79' : 'none', borderTop: 'none' }}
+                                            style={{
+                                                borderBottom: rowIndex === data.length - 1 ? '2px solid #235D79' : 'none',
+                                                borderTop: 'none',
+                                                // backgroundColor: selectedHeaders[header] ? '#235D79' : '',
+                                                // color: selectedHeaders[header] ? 'white' : '',
+                                            }}
                                         >
                                             {item[header]}
                                         </motion.td>

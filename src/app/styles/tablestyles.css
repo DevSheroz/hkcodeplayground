@@ -43,9 +43,6 @@ thead th:last-child {
     border-right: none;
 }
 
-.selectedHeader {
-    background-color: #d3d3d3;
-}
 
 tbody tr {
     background-color: #f3f3f3; 
@@ -80,6 +77,21 @@ tbody td:first-child {
 tbody td:last-child {
     border-right: none;
 }
+
+.selectedHeader {
+    background-color: #235D79;
+    color: white;
+    border-color: #235D79;
+}
+
+.selectedHeader .headerWrapper button .chakra-icon {
+    color: white; /* Change icon color to white */
+}
+
+/* .selectedColumn {
+    background-color: #235D79;
+    color: white;
+} */
 
 .headerWrapper {
     position: relative;
