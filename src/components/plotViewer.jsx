@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { embed } from '@bokeh/bokehjs';
-import { Button, Alert, AlertIcon } from '@chakra-ui/react';
+import { Box, Button, Alert, AlertIcon } from '@chakra-ui/react';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import MapIcon from '@mui/icons-material/Map';
+import { LuLineChart } from "react-icons/lu";
+import { IoBarChartSharp } from "react-icons/io5";
+
+
 import axios from 'axios';
 import { motion } from 'framer-motion';
+
 
 const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared, onAskAI }) => {
     const [fullPlotData, setFullPlotData] = useState(null);
@@ -104,45 +110,75 @@ const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared, onAs
                         variant="solid"
                         bg="blue.500"
                         color="white"
-                        _hover={{ bg: "blue.600" }}
-                        _active={{ bg: "blue.700" }}
+                        boxShadow="0px 8px 6px -1px rgba(0, 0, 0, 0.1)"
+                        _hover={{ bg: "blue.400" }}
+                        _active={{
+                            bg: "blue.500",
+                            boxShadow: "none"
+                        }}
                         width="100px"
                         marginLeft="10px"
                         onClick={() => handleButtonClick('line')}
+                        leftIcon={<LuLineChart size="1.5em" color="white" />}
                     >
                         Line
                     </Button>
                     <Button
                         size="sm"
                         variant="solid"
-                        bg="red.400"
+                        bg="blue.500"
                         color="white"
-                        _hover={{ bg: "red.500" }}
-                        _active={{ bg: "red.600" }}
+                        boxShadow="0px 8px 6px -1px rgba(0, 0, 0, 0.1)"
+                        _hover={{ bg: "blue.400" }}
+                        _active={{
+                            bg: "blue.500",
+                            boxShadow: "none"
+                        }}
                         width="100px"
                         marginLeft="10px"
                         onClick={() => handleButtonClick('bar')}
+                        leftIcon={<IoBarChartSharp size="1.5em" color="white" />}
                     >
                         Bar
                     </Button>
+                        <Button
+                            size="sm"
+                            variant="solid"
+                            bg="orange.500"
+                            color="white"
+                            boxShadow="0px 8px 6px -1px rgba(0, 0, 0, 0.1)"
+                            _hover={{ bg: "orange.400" }}
+                            _active={{
+                                bg: "orange.500",
+                                boxShadow: "none"
+                            }}
+                            width="100px"
+                            marginLeft="10px"
+                            leftIcon={<MapIcon w={4} h={4} />}
+                        >
+                            Map
+                        </Button>
                 </div>
-                <Button
-                    size="sm"
-                    variant="solid"
-                    bg="gray.50"
-                    color="gray.700"
-                    _hover={{ bg: "gray.200" }}
-                    _active={{ bg: "gray.50" }}
-                    width="100px"
-                    marginLeft="10px"
-                    borderColor="gray.500"
-                    borderWidth="1px"
-                    leftIcon={<AutoAwesomeIcon sx={{ color: "#ffc107", fontSize: "20px" }} />}
-                    onClick={handleAskAI}
-                >
-                    Ask AI
-                </Button>
-            </div>
+                    <Button
+                        size="sm"
+                        variant="solid"
+                        bg="gray.50"
+                        color="gray.700"
+                        boxShadow="0px 8px 6px -1px rgba(0, 0, 0, 0.1)"
+                        rounded="md"
+                        borderColor="gray.300"
+                        borderWidth="1px"
+                        _hover={{ bg: "white" }}
+                        _active={{
+                            bg: "white",
+                            boxShadow: "none"
+                        }}
+                        leftIcon={<AutoAwesomeIcon sx={{ color: "#ffc107", fontSize: "20px" }} />}
+                        onClick={handleAskAI}
+                    >
+                        Ask AI
+                    </Button>
+                </div>
             <div>
                 {showAlert && (
                     <Alert status="warning" mb={4}>

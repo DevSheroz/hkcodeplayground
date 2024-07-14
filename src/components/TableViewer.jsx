@@ -5,9 +5,11 @@ import { motion } from 'framer-motion';
 
 import TableFilter from "./TableFilter";
 import AddAlgorithmButton from "./addAlgo";
-import PlotViewer from "./plotDynamic";
 import ChatPrompt from "./askAI";
 import "../app/styles/tablestyles.css";
+
+import dynamic from "next/dynamic";
+const PlotViewer = dynamic( () => import("./plotViewer"), { ssr: false });
 
 const TableViewer = ({ limitedData, cacheKey }) => {
     const [data, setData] = useState([]);

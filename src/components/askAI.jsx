@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Box, Button, Input, InputGroup, InputRightElement, Text, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import TelegramIcon from '@mui/icons-material/Telegram';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -219,7 +219,7 @@ const ChatPrompt = ({ cacheKey }) => {
                             minHeight="40px"
                             padding="0"
                         >
-                            {isLoading ? <StopCircleIcon /> : <ArrowUpwardIcon />}
+                            {isLoading ? <StopCircleIcon /> : <TelegramIcon />}
                         </Button>
                     </motion.div>
                 </InputRightElement>
