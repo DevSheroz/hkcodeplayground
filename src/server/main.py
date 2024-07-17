@@ -8,6 +8,7 @@ from cache_redis import RedisCache
 from model import ReadingData, AlgorithmModel
 from filter import DataFilter
 from plot import BokehPlotter
+from map import FoliumPlotter
 from agent import DataAnalysisAgent
 
 import json
@@ -194,6 +195,22 @@ async def plot_data(columns: str = Query(...), cache_key: str = Query(...), plot
 
     except Exception as e:
         logging.error(f"Error generating plot: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/map")
+async def plot_map(cache_key: str = Query(...), lat: str = Query(...), lon: str = Query(...)):
+    try:
+        cached_data = await redis_cache.get(cache_key)
+        if cached_data is None:
+            raise HTTPException(status_code=404, detail="Cache key not found")
+
+        data = json.loads(cached_data)
+        plotter = FoliumPlotter(data, lat, lon)
+        plot_html = plotter.heatmap_plot()
+
+        return JSONResponse(content={"heatmap": plot_html})
+
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/chat")
