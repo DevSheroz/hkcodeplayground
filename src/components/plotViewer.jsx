@@ -130,6 +130,7 @@ const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared, onAs
 
     const visible = { opacity: 1, y: 0, transition: { duration: 0.5 } };
 
+    // itemvariants for motion
     const itemVariants = {
         hidden: { opacity: 0, y: 10 },
         visible,
@@ -233,7 +234,7 @@ const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared, onAs
                     <motion.div
                         id="bokeh-plot-full"
                         key={`full-${fullPlotData}`}
-                        style={{ minHeight: '400px' }}
+                        style={{ minHeight: '400px', display: 'flex', justifyContent: 'center'}}
                         initial="hidden"
                         animate="visible"
                         variants={itemVariants}
@@ -243,7 +244,7 @@ const PlotViewer = ({ cacheKey, selectedColumns, clearPlot, onPlotsCleared, onAs
                     <motion.div
                         id="bokeh-plot-filtered"
                         key={`filtered-${filteredPlotData}`}
-                        style={{ minHeight: '400px' }}
+                        style={{ minHeight: '400px', display: 'flex', justifyContent: 'center' }}
                         initial="hidden"
                         animate="visible"
                         variants={itemVariants}

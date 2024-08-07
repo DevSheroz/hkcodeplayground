@@ -46,6 +46,18 @@ const ChatPrompt = ({ cacheKey }) => {
     const [message, setMessage] = useState('');
     const [chatResponse, setChatResponse] = useState(null);  // Store the response
     const [isLoading, setIsLoading] = useState(false);
+    const [sessionId, setSessionId] = useState(() => {
+        // Initialize a session ID
+        const savedSessionId = localStorage.getItem('session_id');
+        if (savedSessionId) {
+            return savedSessionId;
+        } else {
+            const newSessionId = Date.now(); // make a session ID
+            localStorage.setItem('session_id', newSessionId);
+            return newSessionId;
+        }
+    });
+
     const controllerRef = useRef(null); // Reference to store the AbortController
     const responseRef = useRef(null); // Reference to the response Box
 
@@ -74,16 +86,18 @@ const ChatPrompt = ({ cacheKey }) => {
                 return;
             }
 
-            console.log(message, cacheKey);
+            console.log(message, cacheKey, sessionId);
             setIsLoading(true);
 
             controllerRef.current = new AbortController(); // Create a new AbortController
 
             try {
                 const res = await axios.post('http://localhost:8001/chat', null, {
+                
                     params: {
                         query: message,
-                        cache_key: cacheKey
+                        cache_key: cacheKey,
+                        session_id: sessionId // Include session_id in the request
                     },
                     signal: controllerRef.current.signal // Pass the signal to the request
                 });

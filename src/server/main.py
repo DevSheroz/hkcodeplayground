@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from datetime import datetime
-
 from db_influx import InfluxDBHandler
 from cache_redis import RedisCache
 from model import ReadingData, AlgorithmModel
@@ -10,12 +9,10 @@ from filter import DataFilter
 from plot import BokehPlotter
 from map import FoliumPlotter
 from agent import DataAnalysisAgent
-
 import json
 import os
 import requests
 import logging
-
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -39,6 +36,9 @@ app.add_middleware(
 influx_handler = InfluxDBHandler(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG)
 redis_cache = RedisCache()
 logging.basicConfig(level=logging.INFO)
+
+# In-memory storage for session-based prompts and responses
+session_storage = {}
 
 @app.post("/load_data", response_class=JSONResponse)
 async def load_data(req_no: str, item_no: str, start_date: str, end_date: str):
@@ -74,8 +74,7 @@ async def read_data(body: ReadingData):
 async def get_first_last_time(req_no: str, veh_no: str):
     try:
         veh = veh_no.split(" ")[1]
-        start_timestamp, end_timestamp = influx_handler.query_first_last_time(req_no,veh)
-
+        start_timestamp, end_timestamp = influx_handler.query_first_last_time(req_no, veh)
         return {"start_timestamp": start_timestamp, "end_timestamp": end_timestamp}
     
     except Exception as e:
@@ -109,22 +108,17 @@ async def add_algorithm(cache_key: str = Query(...), algorithm_name: str = Query
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
 
 @app.post("/filtering", response_class=JSONResponse)
 async def filtering(cache_key: str = Query(...), filter_parms: dict = Body(...)):
     try:
-        # Check for the subcache existence
         subcache_key = f"{cache_key}:filtered"
         cached_data = await redis_cache.get(subcache_key)
 
         if not cached_data:
-            # If no filtered cache, fall back to the original cache
             cached_data = await redis_cache.get(cache_key)
-
             if not cached_data:
                 raise HTTPException(status_code=404, detail="Cache key not found")
-        
 
         data_list = json.loads(cached_data)
         print("received data length: ", len(data_list))
@@ -137,19 +131,17 @@ async def filtering(cache_key: str = Query(...), filter_parms: dict = Body(...))
             data=data_list, selected_filter=filter, input_value=value, checkboxes=checkboxes, column=column
         )
         filtered_df = filterClass.apply_filter()
-        # filtering 후 결과물이 없을 시 error 전송
         print("processed data length: ", len(filtered_df))
         if filtered_df.empty:
             raise HTTPException(status_code=404, detail="No data after filtering")
         
         filtered_data_json = filtered_df.to_json(orient='records')
-
         await redis_cache.set(subcache_key, filtered_data_json)
-        return JSONResponse(content={"filtered_data": json.loads(filtered_data_json)[:5]})  
+        return JSONResponse(content={"filtered_data": json.loads(filtered_data_json)[:5]})
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.post("/reset", response_class=JSONResponse)
 async def reset(cache_key: str = Query(...)):
     try:
@@ -158,12 +150,11 @@ async def reset(cache_key: str = Query(...)):
         print("resetting cache")
         original_cached_data = await redis_cache.get(cache_key)
         data = json.loads(original_cached_data)[:5]
-
         return JSONResponse(content={"reset_data": data})
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.post("/plot")
 async def plot_data(columns: str = Query(...), cache_key: str = Query(...), plot: str = Query(...)):
     try:
@@ -196,7 +187,7 @@ async def plot_data(columns: str = Query(...), cache_key: str = Query(...), plot
     except Exception as e:
         logging.error(f"Error generating plot: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.post("/map")
 async def plot_map(cache_key: str = Query(...), lat: str = Query(...), lon: str = Query(...)):
     try:
@@ -212,9 +203,10 @@ async def plot_map(cache_key: str = Query(...), lat: str = Query(...), lon: str 
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+
 @app.post("/chat")
-async def ask_ai(cache_key: str = Query(...), query: str = Query(...)):
+async def ask_ai(cache_key: str = Query(...), query: str = Query(...), session_id: str = Query(...)):
+    print(cache_key, query, session_id)
     try:
         subcache_key = f"{cache_key}:filtered"
         cached_data = await redis_cache.get(subcache_key)
@@ -225,16 +217,21 @@ async def ask_ai(cache_key: str = Query(...), query: str = Query(...)):
                 raise HTTPException(status_code=404, detail="Cache key not found")
 
         data = json.loads(cached_data)
-
-        # Initialize the DataAnalysisAgent with the data and query
-        pandas_ai = DataAnalysisAgent(data, query)
+        # Initialize the DataAnalysisAgent with the data, query, session_id, and session storage
+        pandas_ai = DataAnalysisAgent(data, query, session_id, session_storage)
         response = pandas_ai.handle_query()
-        print("!!!!!!!!",response)
+        print("!!!!!!!!", response)
         return response
 
     except Exception as e:
         logging.error(f"Error in /chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.get("/history/{session_id}")
+# async def get_history(session_id: int):
+#     if session_id not in session_storage:
+#         raise HTTPException(status_code=404, detail="Session not found")
+#     return session_storage[session_id]
 
 if __name__ == "__main__":
     import uvicorn

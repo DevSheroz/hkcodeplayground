@@ -6,15 +6,9 @@ import TableViewer from "@/components/TableViewer"
 
 const Main = () => (
     <>
-        {/* <div>
-            <TopBar />
-        </div> */}
         <div>
             <DataInput />
         </div>
-        {/* <div>
-            <TableViewer />
-        </div> */}
     </>
 );
 
