@@ -16,7 +16,7 @@ import logging
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv('../api/.env')
+load_dotenv('../.env')
 
 INFLUXDB_URL = os.getenv("INFLUXDB_URL")
 INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")

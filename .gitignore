@@ -45,7 +45,7 @@ pandasai.log
 cache
 
 # environment variables
-src/api/.env
+src/.env
 
 # jupyter
 .ipynb_checkpoints

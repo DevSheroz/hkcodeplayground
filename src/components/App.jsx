@@ -1,3 +1,5 @@
+import dynamic from 'next/dynamic';
+
 import React, { useState, useEffect, useRef } from "react";
 import {
     Stack,
@@ -12,59 +14,13 @@ import {
 } from "@chakra-ui/react";
 import { BiUpload } from 'react-icons/bi';
 import { RangeDatepicker } from "chakra-dayzed-datepicker";
-import Select from "./ClientSelectData";
 import axios from "axios";
+import TopBar from "./TopBar";
 import TableViewer from "./TableViewer"; 
 import AnimatedBars from "./animatedBars";
 
+const Select = dynamic(() => import('react-select'), { ssr: false });
 
-const TopBar = () => (
-    <Stack
-        width="95%"
-        margin="10px auto"
-        paddingX="25px"
-        paddingY="20px"
-        borderRadius="4px"
-        direction="row"
-        justifyContent="space-between"
-        align="center"
-        spacing="12px"
-        overflow="hidden"
-        borderColor="#E0E0E0"
-        borderWidth="1px"
-        boxShadow={"0px 0px 5px rgba(0, 0, 0, 0.1)"}
-    >
-        <Stack direction="row" justify="flex-start" align="flex-start" spacing="12px">
-            <Avatar name="S" src="" size="xs" width="39px" height="39px" background="#A0AEC0">
-                <AvatarBadge boxSize="1.25em" background="green.500" />
-            </Avatar>
-            <Stack justify="flex-start" align="flex-start" spacing="0px" overflow="hidden" height="39px">
-                <Text fontFamily="Inter" fontWeight="semibold" fontSize="15px" color="#000000" width="87px" height="21px">
-                    홍일동
-                </Text>
-                <Text
-                    fontFamily="Inter"
-                    fontWeight="medium"
-                    fontSize="15px"
-                    textDecoration="underline"
-                    color="#718096"
-                    width="100%"
-                    height="100%"
-                >
-                    hong@hankookn.com
-                </Text>
-            </Stack>
-        </Stack>
-        <Stack justify="flex-end" alignItems="center">
-            <img
-                src="/img/logo.png"
-                alt="Logo description"
-                width="130px"
-                height="55px"
-            />
-        </Stack>
-    </Stack>
-);
 
 const DataInput = ({ menuPortalTargetRef }) => {
     const [selectedDates, setSelectedDates] = useState([new Date(), new Date()]);
@@ -279,7 +235,7 @@ const DataInput = ({ menuPortalTargetRef }) => {
             boxShadow="0px 0px 5px rgba(0, 0, 0, 0.1)"
         >
             <Stack width="100%">
-                <Text fontFamily="Inter" fontWeight="bold" fontSize="20px" color="#000000" width="100%">
+                <Text fontFamily="Verdana" fontWeight="bold" fontSize="18px" color="#000000" width="100%">
                     Driving data
                 </Text>
                 <svg width="100%" height="1">

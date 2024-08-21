@@ -15,7 +15,7 @@ const TopBar = () => (
         overflow="hidden"
         borderColor="#E0E0E0"
         borderWidth="1px"
-        
+        boxShadow={"0px 0px 5px rgba(0, 0, 0, 0.1)"}
     >
         <Stack direction="row" justify="flex-start" align="flex-start" spacing="12px">
             <Avatar name="S" src="" size="xs" width="39px" height="39px" background="#A0AEC0">

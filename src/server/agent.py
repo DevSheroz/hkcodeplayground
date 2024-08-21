@@ -35,6 +35,7 @@ class DataAnalysisAgent:
             "verbose": False,
             "open_charts": False,
             "save_charts": False,
+            
         })
         return self.df
 
