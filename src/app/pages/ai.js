@@ -3,7 +3,7 @@ import React from "react";
 import AIPage from "@/components/AI/AiPage";
 import TopBar from "@/components/TopBar";
 
-const EDA = () => (
+const AIAnalysis = () => (
     <>
         <div>
             <TopBar />            
@@ -12,4 +12,4 @@ const EDA = () => (
     </>
 );
 
-export default EDA;
+export default AIAnalysis;

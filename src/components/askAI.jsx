@@ -116,7 +116,7 @@ const ChatPrompt = ({ cacheKey }) => {
                 setIsLoading(false);
             }
 
-            setMessage('');
+            // setMessage(''); // Clear input text after press enter
         }
     };
 
