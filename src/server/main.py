@@ -37,8 +37,6 @@ influx_handler = InfluxDBHandler(INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG)
 redis_cache = RedisCache()
 logging.basicConfig(level=logging.INFO)
 
-# In-memory storage for session-based prompts and responses
-session_storage = {}
 
 @app.post("/load_data", response_class=JSONResponse)
 async def load_data(req_no: str, item_no: str, start_date: str, end_date: str):
@@ -203,29 +201,64 @@ async def plot_map(cache_key: str = Query(...), lat: str = Query(...), lon: str 
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+
+# Global dictionary to store instances of DataAnalysisAgent
+agent_store = {}
 
 @app.post("/chat")
 async def ask_ai(cache_key: str = Query(...), query: str = Query(...), session_id: str = Query(...)):
     print(cache_key, query, session_id)
     try:
-        subcache_key = f"{cache_key}:filtered"
-        cached_data = await redis_cache.get(subcache_key)
+        # Check if the agent for this session_id already exists
+        if session_id not in agent_store:
+            subcache_key = f"{cache_key}:filtered"
+            cached_data = await redis_cache.get(subcache_key)
 
-        if cached_data is None:
-            cached_data = await redis_cache.get(cache_key)
             if cached_data is None:
-                raise HTTPException(status_code=404, detail="Cache key not found")
+                cached_data = await redis_cache.get(cache_key)
+                if cached_data is None:
+                    raise HTTPException(status_code=404, detail="Cache key not found")
 
-        data = json.loads(cached_data)
-        # Initialize the DataAnalysisAgent with the data, query, session_id, and session storage
-        pandas_ai = DataAnalysisAgent(data, query, session_id, session_storage)
-        response = pandas_ai.handle_query()
+            data = json.loads(cached_data)
+            # Initialize the DataAnalysisAgent and store it in the agent_store
+            agent_store[session_id] = DataAnalysisAgent(data, session_id)
+
+        # Retrieve the existing DataAnalysisAgent from the store
+        pandas_ai = agent_store[session_id]
+
+        # Process the query using the existing instance
+        response = pandas_ai.handle_query(query)
         print("!!!!!!!!", response)
         return response
 
     except Exception as e:
         logging.error(f"Error in /chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# @app.post("/chat")
+# async def ask_ai(cache_key: str = Query(...), query: str = Query(...), session_id: str = Query(...)):
+#     print(cache_key, query, session_id)
+#     try:
+#         subcache_key = f"{cache_key}:filtered"
+#         cached_data = await redis_cache.get(subcache_key)
+
+#         if cached_data is None:
+#             cached_data = await redis_cache.get(cache_key)
+#             if cached_data is None:
+#                 raise HTTPException(status_code=404, detail="Cache key not found")
+
+#         data = json.loads(cached_data)
+#         # Initialize the DataAnalysisAgent with the data, query, session_id, and session storage
+#         pandas_ai = DataAnalysisAgent(data, query, session_id)
+#         response = pandas_ai.handle_query()
+#         print("!!!!!!!!", response)
+#         return response
+
+#     except Exception as e:
+#         logging.error(f"Error in /chat endpoint: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 # @app.get("/history/{session_id}")
 # async def get_history(session_id: int):

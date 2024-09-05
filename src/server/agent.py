@@ -8,12 +8,12 @@ import logging
 import re
 import os
 
+from icecream import ic
+
 class DataAnalysisAgent:
-    def __init__(self, df, query: str, session_id: int, storage: dict):
+    def __init__(self, df, session_id: int):
         self.data = pd.DataFrame(df)
-        self.query = query
         self.session_id = session_id
-        self.storage = storage
 
         # Load Azure OpenAI credentials from environment variables
         self.api_key = os.getenv('API_KEY')
@@ -28,25 +28,18 @@ class DataAnalysisAgent:
             azure_endpoint=self.azure_endpoint,
         )
 
-    def initialize_df(self):
-        self.df = SmartDataframe(self.data, config={
-            "llm": self.llm,
-            "description": "You are a data analysis agent. Your main goal is to help non-technical users to analyze data.",
-            "verbose": False,
-            "open_charts": False,
-            "save_charts": False,
-            
-        })
-        return self.df
-
-    def handle_query(self):
-        # Concat prev prompts
-        previous_interactions = ""
-        if self.session_id in self.storage:
-            for interaction in self.storage[self.session_id]:
-                previous_interactions = f"Prompt: {interaction['prompt']}\n"
-
-        full_context = previous_interactions + f"User: {self.query}\n"
+    
+        self.agent = SmartDataframe(self.data, config={
+                "llm": self.llm,
+                "description": "You are a data analysis agent. Your main goal is to help non-technical users to analyze data.",
+                "verbose": False,
+                "open_charts": False,
+                "save_charts": False,
+                "enable_cache": True,
+                "memory_size": 50    
+            })
+    
+    def handle_query(self, query):
 
         # Init logger
         logger = logging.getLogger('pandasai.helpers.logger')
@@ -56,11 +49,11 @@ class DataAnalysisAgent:
         log_handler = logging.StreamHandler(log_stream)
         logger.addHandler(log_handler)
 
-        df = self.initialize_df()
+        
 
         # Generate response using the full context
-        response = df.chat(full_context)
-
+        response = self.agent.chat(query)
+        ic(self.agent.chat(query))
         # Process the log content
         log_handler.flush()
         log_content = log_stream.getvalue()
@@ -85,11 +78,6 @@ class DataAnalysisAgent:
                     result = {"type": result_type, "value": response}
             else:
                 result = {"type": "string", "value": "Unfortunately, I don't know how to help you with that."}
-
-            # Store the current prompt and response
-            if self.session_id not in self.storage:
-                self.storage[self.session_id] = []
-            self.storage[self.session_id].append({"prompt": self.query, "response": result})
 
             return result
 
